@@ -1,0 +1,7 @@
+{
+  "name": "Recetario Gourmet Inteligente",
+  "description": "Un recetario interactivo con asistente de voz robusto, diseñado para cocinar con manos libres.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
