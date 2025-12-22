@@ -21,7 +21,8 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   
-  const shoppingButtonRef = useRef<HTMLButtonElement>(null);
+  // Tracking de progreso para mostrar en el grid
+  const [progressData, setProgressData] = useState<Record<number, number>>({});
 
   const [customTimes, setCustomTimes] = useState<Record<number, string>>(() => {
     const saved = localStorage.getItem('gourmet_custom_times');
@@ -39,6 +40,16 @@ function App() {
   });
   
   const [isShoppingListOpen, setIsShoppingListOpen] = useState(false);
+
+  useEffect(() => {
+    // Escanear progreso guardado al cargar
+    const progress: Record<number, number> = {};
+    RECIPES.forEach(r => {
+      const saved = localStorage.getItem(`recipe_progress_${r.id}`);
+      if (saved) progress[r.id] = parseInt(saved);
+    });
+    setProgressData(progress);
+  }, [isModalOpen]);
 
   useEffect(() => {
     localStorage.setItem('gourmet_shopping_list', JSON.stringify(shoppingList));
@@ -60,10 +71,7 @@ function App() {
   };
 
   const handleUpdateTime = (recipeId: number, newTime: string) => {
-    setCustomTimes(prev => ({
-      ...prev,
-      [recipeId]: newTime
-    }));
+    setCustomTimes(prev => ({ ...prev, [recipeId]: newTime }));
   };
 
   const addToShoppingList = (ingredients: string[]) => {
@@ -89,14 +97,6 @@ function App() {
     setShoppingList(prev => prev.filter(item => item.id !== id));
   };
 
-  const handleClearList = () => {
-    setShoppingList([]);
-    setIsConfirmingClear(false);
-  };
-
-  const categories = ['todos', 'aperitivo', 'primero', 'segundo', 'postre'];
-  const difficulties = ['todas', 'Baja', 'Media', 'Alta'];
-
   const filteredRecipes = useMemo(() => {
     return RECIPES.filter(recipe => {
       const matchesCategory = activeCategory === 'todos' || recipe.category === activeCategory;
@@ -107,93 +107,38 @@ function App() {
     });
   }, [activeCategory, activeDifficulty, searchQuery, showFavoritesOnly, favorites]);
 
-  const openRecipe = (recipe: Recipe) => {
-    setSelectedRecipe(recipe);
-    setIsModalOpen(true);
-  };
-
-  if (showLanding) {
-    return <LandingPage onEnter={() => setShowLanding(false)} />;
-  }
+  if (showLanding) return <LandingPage onEnter={() => setShowLanding(false)} />;
 
   return (
-    <div className="min-h-screen bg-stone-50 pb-20 animate-fade-in">
-      {/* Shopping List Drawer */}
+    <div className="min-h-screen bg-stone-50 pb-20 animate-fade-in selection:bg-amber-200">
+      {/* Shopping List Drawer (ARIA ready) */}
       {isShoppingListOpen && (
-        <div className="fixed inset-0 z-[60] overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="shopping-title">
-          <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity" onClick={() => { setIsShoppingListOpen(false); setIsConfirmingClear(false); }}></div>
+        <div className="fixed inset-0 z-[60] overflow-hidden" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity" onClick={() => setIsShoppingListOpen(false)}></div>
           <div className="absolute inset-y-0 right-0 max-w-full flex">
             <div className="w-screen max-w-md transform transition-transform animate-slide-left bg-white shadow-2xl flex flex-col">
               <div className="p-8 border-b border-stone-100 flex justify-between items-center">
-                <h2 id="shopping-title" className="text-2xl font-serif font-bold text-stone-900">Tu Despensa</h2>
-                <button 
-                  onClick={() => { setIsShoppingListOpen(false); setIsConfirmingClear(false); }} 
-                  className="p-2 hover:bg-stone-100 rounded-full transition-colors focus:ring-2 focus:ring-amber-500 outline-none"
-                  aria-label="Cerrar despensa"
-                >
+                <h2 className="text-2xl font-serif font-bold text-stone-900">Tu Despensa</h2>
+                <button onClick={() => setIsShoppingListOpen(false)} className="p-2 hover:bg-stone-100 rounded-full transition-colors" aria-label="Cerrar">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
               </div>
               
               <div className="flex-1 overflow-y-auto p-8 space-y-4 scrollbar-hide">
                 {shoppingList.length === 0 ? (
-                  <div className="text-center py-20" role="status">
-                    <span className="text-4xl block mb-4" aria-hidden="true">🛒</span>
-                    <p className="text-stone-400 font-light italic">Tu lista está vacía.</p>
-                  </div>
+                  <div className="text-center py-20 text-stone-400 italic">Lista vacía.</div>
                 ) : (
                   shoppingList.map(item => (
-                    <div key={item.id} className="flex items-center justify-between group bg-stone-50 p-5 rounded-2xl border border-transparent hover:border-amber-200 hover:bg-white transition-all shadow-sm hover:shadow-md">
-                      <button 
-                        className="flex items-center gap-4 cursor-pointer flex-1 text-left focus:outline-none" 
-                        onClick={() => toggleCartItem(item.id)}
-                        aria-pressed={item.completed}
-                      >
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 transition-all ${item.completed ? 'bg-amber-600 border-amber-600 scale-90' : 'border-stone-300'}`}>
+                    <div key={item.id} className="flex items-center justify-between group bg-stone-50 p-5 rounded-2xl border border-transparent hover:border-amber-200 hover:bg-white transition-all shadow-sm">
+                      <button className="flex items-center gap-4 flex-1 text-left" onClick={() => toggleCartItem(item.id)}>
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 ${item.completed ? 'bg-amber-600 border-amber-600' : 'border-stone-300'}`}>
                           {item.completed && <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg>}
                         </div>
-                        <span className={`text-sm transition-all ${item.completed ? 'text-stone-400 line-through' : 'text-stone-700 font-medium'}`}>{item.name}</span>
+                        <span className={`text-sm ${item.completed ? 'text-stone-400 line-through' : 'text-stone-700 font-medium'}`}>{item.name}</span>
                       </button>
-                      <button 
-                        onClick={() => removeCartItem(item.id)} 
-                        className="p-2 opacity-100 md:opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-all focus:ring-2 focus:ring-red-500 rounded-lg outline-none"
-                        aria-label={`Eliminar ${item.name} de la lista`}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                      </button>
+                      <button onClick={() => removeCartItem(item.id)} className="p-2 opacity-0 group-hover:opacity-100 text-stone-300 hover:text-red-500 transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                     </div>
                   ))
-                )}
-              </div>
-
-              <div className="p-8 bg-stone-50 border-t border-stone-200">
-                {!isConfirmingClear ? (
-                  <button 
-                    disabled={shoppingList.length === 0}
-                    onClick={() => setIsConfirmingClear(true)} 
-                    className="w-full py-5 text-xs font-black uppercase tracking-[0.2em] text-stone-500 hover:text-red-600 disabled:opacity-30 transition-all flex items-center justify-center gap-3 bg-white rounded-2xl border border-stone-200 shadow-sm focus:ring-2 focus:ring-red-500 outline-none"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    Limpiar Despensa
-                  </button>
-                ) : (
-                  <div className="bg-red-50 p-6 rounded-3xl border border-red-100 space-y-4 animate-fade-in-up" role="alert">
-                    <p className="text-center text-[10px] font-black text-red-800 uppercase tracking-widest leading-relaxed">¿Deseas vaciar todos los ingredientes guardados?</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button 
-                        onClick={handleClearList} 
-                        className="py-4 bg-red-600 text-white text-[9px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-600/20 active:scale-95 transition-all focus:ring-2 focus:ring-red-400 outline-none"
-                      >
-                        Confirmar
-                      </button>
-                      <button 
-                        onClick={() => setIsConfirmingClear(false)} 
-                        className="py-4 bg-white border border-red-200 text-red-800 text-[9px] font-black uppercase tracking-widest rounded-xl active:scale-95 transition-all focus:ring-2 focus:ring-stone-400 outline-none"
-                      >
-                        Atrás
-                      </button>
-                    </div>
-                  </div>
                 )}
               </div>
             </div>
@@ -202,178 +147,52 @@ function App() {
       )}
 
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200 shadow-sm">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Navegación principal">
-          <div className="flex justify-between h-20 items-center">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl" aria-hidden="true">👨‍🍳</span>
-              <h1 className="text-2xl font-serif font-bold text-stone-800 tracking-tight">
-                Gourmet<span className="text-amber-600">Voice</span>
-              </h1>
-            </div>
-            
-            <div className="flex items-center space-x-4 md:space-x-8">
-              <div className="hidden lg:flex relative">
-                <label htmlFor="recipe-search" className="sr-only">Buscar receta</label>
-                <input 
-                  id="recipe-search"
-                  type="text" 
-                  placeholder="Buscar receta..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-stone-200 rounded-full bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-500 w-64 text-sm"
-                />
-                <svg className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setShowFavoritesOnly(!showFavoritesOnly)} 
-                  className={`p-2.5 rounded-full transition-all focus:ring-2 focus:ring-amber-500 outline-none ${showFavoritesOnly ? 'bg-amber-100 text-amber-600 shadow-inner' : 'text-stone-400 hover:bg-stone-100'}`}
-                  aria-pressed={showFavoritesOnly}
-                  title={showFavoritesOnly ? "Mostrar todas las recetas" : "Mostrar solo favoritos"}
-                >
-                  <span className="sr-only">Favoritos</span>
-                  <svg className="w-5 h-5" fill={showFavoritesOnly ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.382-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
-                </button>
-
-                <button 
-                  ref={shoppingButtonRef}
-                  onClick={() => setIsShoppingListOpen(true)} 
-                  className="relative p-2.5 rounded-full text-stone-600 hover:bg-stone-100 transition-all focus:ring-2 focus:ring-amber-500 outline-none"
-                  aria-expanded={isShoppingListOpen}
-                  aria-haspopup="dialog"
-                  title="Ver despensa"
-                >
-                  <span className="sr-only">Despensa</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                  {shoppingList.length > 0 && (
-                    <span className="absolute top-0 right-0 bg-amber-600 text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-lg border-2 border-white">
-                      {shoppingList.length}
-                    </span>
-                  )}
-                </button>
-              </div>
-            </div>
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">👨‍🍳</span>
+            <h1 className="text-2xl font-serif font-bold text-stone-800 tracking-tight">Gourmet<span className="text-amber-600">Voice</span></h1>
           </div>
-          
-          <div className="flex items-center gap-6 overflow-x-auto pb-4 pt-1 scrollbar-hide" role="group" aria-label="Filtros de recetas">
-             <div className="flex gap-2">
-               {categories.map(cat => (
-                 <button
-                   key={cat}
-                   onClick={() => setActiveCategory(cat)}
-                   aria-pressed={activeCategory === cat}
-                   className={`
-                      px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-all border focus:ring-2 focus:ring-amber-500 outline-none
-                      ${activeCategory === cat 
-                        ? 'bg-stone-900 text-white border-stone-900 shadow-md' 
-                        : 'bg-white text-stone-400 border-stone-200 hover:border-amber-500 hover:text-amber-600'}
-                   `}
-                 >
-                   {cat}
-                 </button>
-               ))}
-             </div>
-             <div className="h-6 w-px bg-stone-200 hidden md:block" aria-hidden="true"></div>
-             <div className="flex gap-2">
-               {difficulties.map(diff => (
-                 <button
-                   key={diff}
-                   onClick={() => setActiveDifficulty(diff)}
-                   aria-pressed={activeDifficulty === diff}
-                   className={`
-                      px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-all border focus:ring-2 focus:ring-amber-500 outline-none
-                      ${activeDifficulty === diff 
-                        ? 'bg-amber-600 text-white border-amber-600 shadow-md' 
-                        : 'bg-stone-100 text-stone-400 border-transparent hover:border-amber-500 hover:text-amber-600'}
-                   `}
-                 >
-                   {diff}
-                 </button>
-               ))}
-             </div>
+          <div className="flex items-center space-x-4">
+            <input type="text" placeholder="Buscar..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="hidden md:block pl-10 pr-4 py-2 border border-stone-200 rounded-full bg-stone-50 focus:ring-2 focus:ring-amber-500 w-64 text-sm" />
+            <button onClick={() => setShowFavoritesOnly(!showFavoritesOnly)} className={`p-2.5 rounded-full ${showFavoritesOnly ? 'bg-amber-100 text-amber-600' : 'text-stone-400 hover:bg-stone-100'}`}><svg className="w-5 h-5" fill={showFavoritesOnly ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.382-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg></button>
+            <button onClick={() => setIsShoppingListOpen(true)} className="relative p-2.5 rounded-full text-stone-600 hover:bg-stone-100 transition-all">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+              {shoppingList.length > 0 && <span className="absolute top-0 right-0 bg-amber-600 text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">{shoppingList.length}</span>}
+            </button>
           </div>
         </nav>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" id="main-content">
-        {filteredRecipes.length === 0 ? (
-          <div className="text-center py-40 animate-fade-in" role="status">
-            <h3 className="text-3xl font-serif text-stone-300 mb-4 italic">No se encontraron delicias</h3>
-            <p className="text-stone-400 font-light">Prueba ajustando los filtros de dificultad o categoría.</p>
-            <button 
-              onClick={() => {setSearchQuery(''); setActiveCategory('todos'); setActiveDifficulty('todas'); setShowFavoritesOnly(false);}} 
-              className="mt-8 px-8 py-3 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all focus:ring-2 focus:ring-amber-500 outline-none"
-            >
-              Restablecer todo
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {filteredRecipes.map(recipe => (
-              <article 
-                key={recipe.id} 
-                onClick={() => openRecipe(recipe)}
-                className="group bg-white rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden border border-stone-200 flex flex-col h-full transform hover:-translate-y-2 focus-within:ring-4 focus-within:ring-amber-500/30"
-              >
-                <div className="relative h-60 overflow-hidden">
-                  <img 
-                    src={recipe.image} 
-                    alt="" 
-                    loading="lazy"
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-black/40 backdrop-blur-md text-white text-[8px] font-black uppercase tracking-widest rounded-full border border-white/10">
-                      {recipe.difficulty}
-                    </span>
-                  </div>
-                  <button 
-                    onClick={(e) => toggleFavorite(e, recipe.id)}
-                    className="absolute top-4 right-4 p-2.5 rounded-full bg-white/90 backdrop-blur shadow-sm hover:bg-white transition-all transform hover:scale-110 active:scale-90 focus:ring-2 focus:ring-amber-500 outline-none"
-                    aria-label={favorites.includes(recipe.id) ? `Quitar ${recipe.title} de favoritos` : `Añadir ${recipe.title} a favoritos`}
-                    aria-pressed={favorites.includes(recipe.id)}
-                  >
-                    <span className="text-xl leading-none" aria-hidden="true">{favorites.includes(recipe.id) ? '⭐' : '☆'}</span>
-                  </button>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {filteredRecipes.map(recipe => (
+            <article key={recipe.id} onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }} className="group bg-white rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden border border-stone-200 flex flex-col transform hover:-translate-y-2">
+              <div className="relative h-56 overflow-hidden">
+                <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-duration-700" />
+                {progressData[recipe.id] !== undefined && (
+                   <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="bg-white text-stone-900 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl">Continuar Paso {progressData[recipe.id] + 1}</span>
+                   </div>
+                )}
+                <div className="absolute top-4 left-4"><span className="px-3 py-1 bg-black/40 backdrop-blur-md text-white text-[8px] font-black uppercase rounded-full">{recipe.difficulty}</span></div>
+                <button onClick={(e) => toggleFavorite(e, recipe.id)} className="absolute top-4 right-4 p-2 rounded-full bg-white/90 shadow-sm transition-transform hover:scale-110">
+                  <span className="text-xl">{favorites.includes(recipe.id) ? '⭐' : '☆'}</span>
+                </button>
+              </div>
+              <div className="p-6 flex-1 flex flex-col">
+                <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest mb-2 block">{recipe.category}</span>
+                <h3 className="text-lg font-serif font-bold text-stone-800 mb-2 leading-tight group-hover:text-amber-600 transition-colors">{recipe.title}</h3>
+                <div className="mt-auto flex items-center justify-between text-[10px] font-black text-stone-500 border-t border-stone-100 pt-4">
+                  <div className="flex items-center gap-1.5"><svg className="w-3 h-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>{customTimes[recipe.id] || recipe.time}</div>
+                  <div className="flex items-center gap-1.5 text-stone-300 group-hover:text-amber-600 transition-colors">Cocinar <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></div>
                 </div>
-
-                <div className="p-7 flex-1 flex flex-col">
-                  <span className="text-[8px] font-black text-amber-600 uppercase tracking-[0.2em] mb-3 block">{recipe.category}</span>
-                  <h3 className="text-xl font-serif font-bold text-stone-800 mb-2 leading-tight group-hover:text-amber-600 transition-colors">
-                      <button className="text-left focus:outline-none">{recipe.title}</button>
-                  </h3>
-                  <p className="text-stone-400 text-xs italic line-clamp-2 mb-6 font-light leading-relaxed">
-                      {recipe.description}
-                  </p>
-                  <div className="mt-auto flex items-center justify-between text-[10px] font-black text-stone-500 border-t border-stone-100 pt-5 tracking-tight">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span className="sr-only">Tiempo de preparación:</span> {customTimes[recipe.id] || recipe.time}
-                      </div>
-                      <div className="flex items-center gap-2 text-stone-300 group-hover:text-amber-600 transition-colors">
-                        Cocinar <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                      </div>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+              </div>
+            </article>
+          ))}
+        </div>
       </main>
 
-      <RecipeModal 
-        recipe={selectedRecipe} 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
-        onAddIngredients={addToShoppingList}
-        onUpdateTime={handleUpdateTime}
-        currentCustomTime={selectedRecipe ? customTimes[selectedRecipe.id] : undefined}
-      />
-      
-      <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 border-t border-stone-200 text-center" role="contentinfo">
-        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">© 2024 GourmetVoice Studio - Cocina con libertad</p>
-      </footer>
+      <RecipeModal recipe={selectedRecipe} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onAddIngredients={addToShoppingList} onUpdateTime={handleUpdateTime} currentCustomTime={selectedRecipe ? customTimes[selectedRecipe.id] : undefined} />
     </div>
   );
 }

@@ -1,39 +1,57 @@
+
 <!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Recetario Gourmet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>GourmetVoice - Tu Asistente de Cocina Inteligente</title>
+    
+    <!-- SEO & Social Media -->
+    <meta name="description" content="Recetario interactivo con control por voz manos libres. La experiencia definitiva para cocinar sin tocar la pantalla." />
+    <meta property="og:title" content="GourmetVoice - Cocina con libertad" />
+    <meta property="og:description" content="Asistente de voz nativo para tus recetas favoritas." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#1c1917" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700;900&display=swap');
       
       body {
         font-family: 'Lato', sans-serif;
+        -webkit-tap-highlight-color: transparent;
       }
       h1, h2, h3, .font-serif {
         font-family: 'Playfair Display', serif;
       }
-      /* Custom scrollbar for recipe modal */
-      .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-      }
-      .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+      /* Estilos para impresión gourmet */
+      @media print {
+        nav, footer, button, .no-print { display: none !important; }
+        body { background: white !important; color: black !important; }
+        .print-container { display: block !important; padding: 2cm; }
+        .recipe-image { max-height: 10cm; width: 100%; object-fit: cover; border-radius: 1rem; }
+        h1 { font-size: 32pt; margin-bottom: 0.5cm; }
+        .ingredients-list { columns: 2; margin: 1cm 0; }
+        .step-item { page-break-inside: avoid; margin-bottom: 0.5cm; border-bottom: 1px solid #eee; padding-bottom: 0.5cm; }
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
-  }
-}
-</script>
-</head>
-  <body class="bg-stone-50 text-stone-800 antialiased">
+    <script type="importmap">
+    {
+      "imports": {
+        "react/": "https://aistudiocdn.com/react@^19.2.0/",
+        "react": "https://aistudiocdn.com/react@^19.2.0",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+      }
+    }
+    </script>
+  </head>
+  <body class="bg-stone-50 text-stone-800 antialiased overflow-x-hidden">
     <div id="root"></div>
   </body>
 </html>
