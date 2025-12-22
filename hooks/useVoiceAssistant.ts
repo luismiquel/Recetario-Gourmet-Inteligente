@@ -15,18 +15,19 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
   const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis);
   const isMounted = useRef(true);
   const isSpeakingRef = useRef(false);
+  const isStartingRef = useRef(false);
   const retryTimeoutRef = useRef<number | null>(null);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current || !enabled || !isMounted.current) return;
-    if (isSpeakingRef.current) return;
+    if (isSpeakingRef.current || isStartingRef.current) return;
 
     try {
+      isStartingRef.current = true;
       recognitionRef.current.start();
     } catch (e: any) {
-      if (e.name !== 'InvalidStateError') {
-         console.warn("Reconocimiento ya en curso o error:", e.message);
-      }
+      isStartingRef.current = false;
+      // Silenciosamente ignorar si ya está iniciado
     }
   }, [enabled]);
 
@@ -43,6 +44,7 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
       recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
+        isStartingRef.current = false;
         if (isMounted.current) {
           setStatus('listening');
           setErrorMessage(null);
@@ -50,30 +52,26 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
       };
 
       recognition.onend = () => {
+        isStartingRef.current = false;
         if (!isMounted.current || !enabled) {
           setStatus('idle');
           return;
         }
 
-        // Sistema de reenganche robusto
         if (!isSpeakingRef.current) {
            if (retryTimeoutRef.current) window.clearTimeout(retryTimeoutRef.current);
            retryTimeoutRef.current = window.setTimeout(() => {
               if (enabled && isMounted.current && !isSpeakingRef.current) {
                 startListening();
               }
-           }, 150); 
+           }, 250); 
         }
       };
 
       recognition.onerror = (event: any) => {
-        if (event.error === 'aborted') return;
-        if (event.error === 'no-speech') return; // Silence handling is done in onend
-
-        if (event.error === 'not-allowed') {
-             setErrorMessage('Micrófono bloqueado.');
-             setStatus('error');
-        }
+        isStartingRef.current = false;
+        if (event.error === 'aborted' || event.error === 'no-speech') return;
+        console.warn("Voice Error:", event.error);
       };
 
       recognition.onresult = (event: any) => {
@@ -102,23 +100,24 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     }
     if (synthRef.current) synthRef.current.cancel();
     isSpeakingRef.current = false;
+    isStartingRef.current = false;
     setStatus('idle');
   }, []);
 
   const speak = useCallback((text: string) => {
     if (!synthRef.current || !isMounted.current) return;
 
-    // Critical: Stop recognition before speaking to avoid feedback loop
     if (recognitionRef.current) {
         try { recognitionRef.current.abort(); } catch(e){}
     }
     
     isSpeakingRef.current = true;
+    isStartingRef.current = false;
     synthRef.current.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-ES';
-    utterance.rate = 1.0;
+    utterance.rate = 1.1; // Ligeramente más rápido para fluidez
     utterance.pitch = 1.0;
     
     setStatus('speaking');
@@ -126,10 +125,9 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     utterance.onend = () => {
       isSpeakingRef.current = false;
       if (isMounted.current && enabled) {
-        // Pause to ensure audio hardware is free
         setTimeout(() => {
             if (isMounted.current && enabled) startListening();
-        }, 350);
+        }, 450); // Delay de seguridad para evitar eco
       } else {
         setStatus('idle');
       }

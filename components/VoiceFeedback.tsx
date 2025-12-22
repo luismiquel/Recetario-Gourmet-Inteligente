@@ -59,7 +59,7 @@ export const VoiceFeedback: React.FC<VoiceFeedbackProps> = ({ status }) => {
   }[status];
 
   return (
-    <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center pointer-events-none w-full max-w-xs sm:max-w-md">
+    <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center pointer-events-none w-full max-w-xs sm:max-w-md" aria-live="assertive">
       <div className={`${config.bg} ${config.animate} flex items-center gap-4 px-6 py-4 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500 transform border border-white/20 backdrop-blur-lg`}>
         <div className="flex-shrink-0 bg-black/10 p-2 rounded-xl">
           {config.icon}
