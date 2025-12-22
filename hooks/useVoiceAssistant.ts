@@ -13,35 +13,33 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
   const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis);
   const isSpeaking = useRef(false);
   const isListening = useRef(false);
-  const restartTimeout = useRef<number | null>(null);
+  const restartTimer = useRef<number | null>(null);
 
-  const stopRecognition = useCallback(() => {
+  const safeStop = useCallback(() => {
     if (recognitionRef.current && isListening.current) {
       try {
         recognitionRef.current.abort();
         isListening.current = false;
-      } catch (e) {
-        console.error("Error al detener reconocimiento:", e);
-      }
+      } catch (e) {}
     }
   }, []);
 
-  const startRecognition = useCallback(() => {
+  const safeStart = useCallback(() => {
     if (!recognitionRef.current || isSpeaking.current || isListening.current || !enabled) return;
-    
     try {
       recognitionRef.current.start();
     } catch (e) {
-      // Si ya está corriendo, abortamos y reintentamos en el siguiente ciclo
-      stopRecognition();
+      // Si falla al arrancar, intentamos limpiar y reiniciar
+      safeStop();
     }
-  }, [enabled, stopRecognition]);
+  }, [enabled, safeStop]);
 
   useEffect(() => {
     const win = window as unknown as IWindow;
     const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
+      console.warn("Reconocimiento de voz no soportado en este navegador.");
       setStatus('error');
       return;
     }
@@ -59,7 +57,7 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
 
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript.toLowerCase();
-        console.log("🎤 Comando:", transcript);
+        console.log("Comando recibido:", transcript);
         setStatus('processing');
         onCommand(transcript);
       };
@@ -67,7 +65,6 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
       recognition.onerror = (event: any) => {
         isListening.current = false;
         if (event.error === 'not-allowed') {
-          console.error("Permiso de micrófono denegado");
           setStatus('error');
         } else if (event.error === 'no-speech') {
           setStatus('idle');
@@ -76,9 +73,10 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
 
       recognition.onend = () => {
         isListening.current = false;
+        // Reiniciar automáticamente si sigue habilitado
         if (enabled && !isSpeaking.current) {
-          if (restartTimeout.current) window.clearTimeout(restartTimeout.current);
-          restartTimeout.current = window.setTimeout(startRecognition, 300);
+          if (restartTimer.current) window.clearTimeout(restartTimer.current);
+          restartTimer.current = window.setTimeout(safeStart, 400);
         } else {
           setStatus('idle');
         }
@@ -88,43 +86,44 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     }
 
     if (enabled) {
-      startRecognition();
+      safeStart();
     } else {
-      stopRecognition();
+      safeStop();
+      setStatus('idle');
     }
 
     return () => {
-      if (restartTimeout.current) window.clearTimeout(restartTimeout.current);
-      stopRecognition();
+      if (restartTimer.current) window.clearTimeout(restartTimer.current);
+      safeStop();
     };
-  }, [enabled, onCommand, startRecognition, stopRecognition]);
+  }, [enabled, onCommand, safeStart, safeStop]);
 
   const speak = useCallback((text: string) => {
     if (!synthRef.current) return;
 
-    // Detenemos la escucha para que no se oiga a sí mismo
-    stopRecognition();
+    safeStop();
     isSpeaking.current = true;
     synthRef.current.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-ES';
     utterance.rate = 1.0;
-    
+    utterance.pitch = 1.0;
+
     utterance.onstart = () => setStatus('speaking');
     
     utterance.onend = () => {
       isSpeaking.current = false;
-      // Esperamos un momento para que el eco del altavoz se disipe antes de escuchar
+      // Esperamos 1 segundo para evitar eco antes de volver a escuchar
       if (enabled) {
-        setTimeout(startRecognition, 700);
+        setTimeout(safeStart, 1000);
       } else {
         setStatus('idle');
       }
     };
 
     synthRef.current.speak(utterance);
-  }, [enabled, startRecognition, stopRecognition]);
+  }, [enabled, safeStart, safeStop]);
 
   return { status, speak };
 };
