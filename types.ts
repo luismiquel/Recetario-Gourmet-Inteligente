@@ -1,3 +1,4 @@
+
 export interface Recipe {
   id: number;
   title: string;
@@ -6,11 +7,11 @@ export interface Recipe {
   description: string;
   ingredients: string[];
   steps: string[];
+  tips: string[]; // Consejos adicionales del chef
   time: string;
-  difficulty: string;
+  difficulty: 'Baja' | 'Media' | 'Alta';
 }
 
-// Polyfill types for SpeechRecognition since it's not fully standard in TS yet
 export interface IWindow extends Window {
   webkitSpeechRecognition: any;
   SpeechRecognition: any;
