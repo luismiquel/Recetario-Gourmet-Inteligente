@@ -19,7 +19,7 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     try {
       recognitionRef.current.start();
     } catch (e) {
-      // Reconocimiento ya iniciado
+      // Ya está escuchando
     }
   }, [enabled]);
 
@@ -27,7 +27,10 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     const win = window as unknown as IWindow;
     const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+      console.warn("Este navegador no soporta reconocimiento de voz nativo.");
+      return;
+    }
 
     const recognition = new SpeechRecognition();
     recognition.lang = 'es-ES';
@@ -43,15 +46,18 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     };
 
     recognition.onerror = (event: any) => {
-      if (event.error === 'no-speech' || event.error === 'aborted') return;
-      console.warn("Voz error:", event.error);
+      if (event.error === 'no-speech') {
+        setStatus('idle');
+        return;
+      }
+      console.warn("Error en el reconocimiento de voz:", event.error);
       setStatus('error');
     };
 
     recognition.onend = () => {
       if (enabled && !isSpeaking.current) {
         if (restartTimeout.current) window.clearTimeout(restartTimeout.current);
-        restartTimeout.current = window.setTimeout(startListening, 300);
+        restartTimeout.current = window.setTimeout(startListening, 400);
       } else {
         setStatus('idle');
       }
@@ -69,7 +75,6 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
   const speak = useCallback((text: string) => {
     if (!synthRef.current) return;
 
-    // Silenciamos micro para no escucharnos
     if (recognitionRef.current) recognitionRef.current.abort();
     
     isSpeaking.current = true;
@@ -77,7 +82,7 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-ES';
-    utterance.rate = 1.05; // Un poco más rápido para fluidez
+    utterance.rate = 1.0;
     utterance.pitch = 1.0;
     
     utterance.onstart = () => setStatus('speaking');
@@ -85,7 +90,7 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     utterance.onend = () => {
       isSpeaking.current = false;
       if (enabled) {
-        setTimeout(startListening, 600);
+        setTimeout(startListening, 800);
       } else {
         setStatus('idle');
       }

@@ -20,9 +20,11 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
   const [portionScale, setPortionScale] = useState(1);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   
-  // Estado del temporizador
+  // Temporizador
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
+  const [maxTimerSeconds, setMaxTimerSeconds] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [activeTimerStep, setActiveTimerStep] = useState<number | null>(null);
 
   useEffect(() => {
     let interval: number;
@@ -32,43 +34,44 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
       setIsTimerRunning(false);
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
       audio.play().catch(() => {});
-      alert("¡El temporizador ha terminado!");
       setTimerSeconds(null);
+      setActiveTimerStep(null);
+      alert("¡Tiempo cumplido!");
     }
     return () => clearInterval(interval);
   }, [isTimerRunning, timerSeconds]);
-
-  const scaledIngredients = useMemo(() => {
-    if (!recipe) return [];
-    if (portionScale === 1) return recipe.ingredients;
-    return recipe.ingredients.map(ing => {
-      return ing.replace(/(\d+(?:[.,]\d+)?)/g, (match) => {
-        const num = parseFloat(match.replace(',', '.'));
-        return (num * portionScale).toString().replace('.', ',');
-      });
-    });
-  }, [recipe, portionScale]);
 
   const handleCommand = (cmd: string) => {
     if (!recipe) return;
     const c = cmd.toLowerCase();
     
-    // Comandos de navegación
-    if (/siguiente|próximo|adelante|hecho|ya está/.test(c)) nextStep();
+    if (/siguiente|próximo|adelante|hecho/.test(c)) nextStep();
     else if (/anterior|atrás|vuelve/.test(c)) prevStep();
-    else if (/repite|qué dice|no he oído/.test(c)) readCurrentStep();
+    else if (/repite|qué dice/.test(c)) readCurrentStep();
     else if (/imprimir|papel/.test(c)) window.print();
+    else if (/cerrar|salir/.test(c)) onClose();
+    else if (/añade todo|lista de compra/.test(c)) {
+      onAddIngredients(recipe.ingredients);
+      speak("He añadido todos los ingredientes a tu lista de compra.");
+    }
     
-    // Comando de temporizador: "pon un temporizador de X minutos"
+    // Salto directo a paso
+    const stepMatch = c.match(/paso (\d+)/);
+    if (stepMatch) {
+      const stepIdx = parseInt(stepMatch[1]) - 1;
+      if (stepIdx >= 0 && stepIdx < recipe.steps.length) {
+        setActiveStep(stepIdx);
+        speak(`Vale, paso ${stepIdx + 1}. ${recipe.steps[stepIdx]}`);
+      }
+    }
+
+    // Temporizador manual por voz
     const timerMatch = c.match(/temporizador de (\d+) minutos/);
     if (timerMatch) {
       const mins = parseInt(timerMatch[1]);
-      setTimerSeconds(mins * 60);
-      setIsTimerRunning(true);
-      speak(`Vale, pongo un temporizador de ${mins} minutos.`);
+      startTimer(mins);
+      speak(`Entendido, cronómetro de ${mins} minutos en marcha.`);
     }
-
-    if (/cerrar|salir|adiós/.test(c)) onClose();
   };
 
   const { status, speak } = useVoiceAssistant({
@@ -76,9 +79,18 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
     onCommand: handleCommand
   });
 
+  const startTimer = (minutes: number, stepIndex: number | null = null) => {
+    const seconds = minutes * 60;
+    setTimerSeconds(seconds);
+    setMaxTimerSeconds(seconds);
+    setIsTimerRunning(true);
+    setActiveTimerStep(stepIndex);
+  };
+
   const nextStep = useCallback(() => {
-    if (!recipe || activeStep >= recipe.steps.length - 1) {
-      speak("Has terminado todos los pasos. ¡A disfrutar del plato!");
+    if (!recipe) return;
+    if (activeStep >= recipe.steps.length - 1) {
+      speak("Buen trabajo, has terminado la receta. ¡A disfrutar!");
       return;
     }
     const next = activeStep + 1;
@@ -98,137 +110,216 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
     speak(`Paso ${activeStep + 1}. ${recipe.steps[activeStep]}`);
   }, [recipe, activeStep, speak]);
 
+  const detectTime = (text: string) => {
+    const match = text.match(/(\d+)\s*(min|minutos)/i);
+    return match ? parseInt(match[1]) : null;
+  };
+
+  const scaledIngredients = useMemo(() => {
+    if (!recipe) return [];
+    return recipe.ingredients.map(ing => {
+      return ing.replace(/(\d+(?:[.,]\d+)?)/g, (match) => {
+        const num = parseFloat(match.replace(',', '.'));
+        return (num * portionScale).toString().replace('.', ',');
+      });
+    });
+  }, [recipe, portionScale]);
+
   if (!isOpen || !recipe) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-8 overflow-hidden" role="dialog">
-      <div className="absolute inset-0 bg-stone-950/95 backdrop-blur-sm no-print" onClick={onClose}></div>
-      
-      <div className={`relative w-full max-w-6xl h-full sm:h-auto sm:max-h-[90vh] bg-white sm:rounded-[3rem] shadow-2xl flex flex-col overflow-hidden recipe-content ${isKitchenMode ? 'bg-stone-900 text-white' : ''}`}>
-        
-        {/* Cabecera para Impresión */}
-        <div className="hidden print-only recipe-header">
-           <h1 className="recipe-title font-serif font-bold text-4xl">{recipe.title}</h1>
-           <p className="text-stone-500 mt-2">Categoría: {recipe.category.toUpperCase()} | Tiempo: {recipe.time} | Dificultad: {recipe.difficulty}</p>
-        </div>
+  // Cálculo del progreso para el temporizador visual circular
+  const progressOffset = timerSeconds !== null 
+    ? (timerSeconds / maxTimerSeconds) * 283 // 283 es el perímetro de un círculo con r=45
+    : 0;
 
-        {/* Cabecera UI */}
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 overflow-hidden" role="dialog">
+      <div className="absolute inset-0 bg-stone-950/90 backdrop-blur-md no-print" onClick={onClose}></div>
+      
+      <div className={`relative w-full max-w-7xl h-full sm:h-[95vh] bg-white sm:rounded-[3rem] shadow-2xl flex flex-col overflow-hidden recipe-content transition-colors duration-500 ${isKitchenMode ? 'bg-stone-900 text-white' : ''}`}>
+        
+        {/* Temporizador Circular Flotante (UI de alta gama) */}
+        {timerSeconds !== null && (
+          <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 no-print pointer-events-none">
+            <div className="bg-stone-900/80 backdrop-blur-xl p-4 rounded-full shadow-2xl flex items-center gap-4 border border-white/10 scale-110">
+              <div className="relative w-16 h-16 pointer-events-auto cursor-pointer" onClick={() => setIsTimerRunning(!isTimerRunning)}>
+                <svg className="w-full h-full -rotate-90">
+                  <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-white/10" />
+                  <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" 
+                    className={`${timerSeconds < 60 ? 'text-red-500' : 'text-amber-500'} transition-all duration-1000`}
+                    strokeDasharray="175.9" strokeDashoffset={175.9 - (timerSeconds / maxTimerSeconds) * 175.9} />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center font-black text-xs text-white tabular-nums">
+                  {Math.floor(timerSeconds / 60)}:{String(timerSeconds % 60).padStart(2, '0')}
+                </div>
+              </div>
+              <div className="pr-4 pointer-events-auto">
+                 <button onClick={() => {setTimerSeconds(null); setActiveTimerStep(null);}} className="text-white/40 hover:text-white transition-colors">✕</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Cabecera */}
         {!isKitchenMode && (
-          <div className="h-56 relative shrink-0 no-print">
-            <img src={recipe.image} alt="" className="w-full h-full object-cover" />
+          <div className="h-64 relative shrink-0 no-print group">
+            <img src={recipe.image} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
             <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent"></div>
-            <button onClick={onClose} className="absolute top-6 right-6 p-4 bg-white/50 backdrop-blur-md rounded-full hover:bg-white text-stone-900 transition-all z-10">✕</button>
+            <button onClick={onClose} className="absolute top-6 right-6 p-4 bg-white/50 backdrop-blur-md rounded-full hover:bg-white text-stone-900 transition-all z-10 shadow-lg">✕</button>
             <div className="absolute bottom-6 left-10">
-              <h2 className="text-4xl font-serif font-bold text-stone-900">{recipe.title}</h2>
+              <h2 className="text-5xl font-serif font-bold text-stone-900 tracking-tight">{recipe.title}</h2>
             </div>
           </div>
         )}
 
         <div className="flex-1 overflow-y-auto p-6 sm:p-12 space-y-12 scrollbar-hide">
-          
-          {/* Fila superior: Timer y Porciones */}
-          <div className="flex flex-wrap items-center justify-between gap-6 no-print">
-            <div className="flex items-center gap-4 bg-stone-100 p-2 rounded-2xl">
-              <span className="text-xs font-black uppercase tracking-widest px-4 text-stone-400">Porciones</span>
-              <div className="flex gap-1">
-                {[1, 2, 4, 6].map(v => (
-                  <button key={v} onClick={() => setPortionScale(v)} className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition-all ${portionScale === v ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30' : 'bg-white text-stone-400 hover:text-stone-900'}`}>{v}x</button>
-                ))}
-              </div>
-            </div>
-
-            {timerSeconds !== null && (
-              <div className="flex items-center gap-4 bg-amber-600 text-white px-6 py-3 rounded-2xl animate-pulse shadow-xl">
-                <span className="text-xl font-black">
-                  {Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, '0')}
-                </span>
-                <button onClick={() => setIsTimerRunning(!isTimerRunning)} className="bg-white/20 p-2 rounded-lg hover:bg-white/40">{isTimerRunning ? '⏸' : '▶'}</button>
-                <button onClick={() => setTimerSeconds(null)} className="text-white/60 hover:text-white">✕</button>
-              </div>
-            )}
-          </div>
-
           <div className="grid lg:grid-cols-12 gap-12">
-            {/* Ingredientes */}
-            <aside className="lg:col-span-4 space-y-8 ingredients-grid">
-              <h3 className="text-2xl font-serif font-bold text-amber-600 flex items-center gap-3">
-                <span>🥕</span> Ingredientes
-              </h3>
-              <ul className="space-y-4 ingredients-list">
-                {scaledIngredients.map((ing, i) => (
-                  <li key={i} className="flex items-start gap-4 group cursor-pointer no-print" onClick={() => {
-                    const n = new Set(checkedIngredients);
-                    n.has(i) ? n.delete(i) : n.add(i);
-                    setCheckedIngredients(n);
-                  }}>
-                    <div className={`w-6 h-6 rounded-lg border-2 mt-0.5 shrink-0 flex items-center justify-center transition-all ${checkedIngredients.has(i) ? 'bg-amber-600 border-amber-600' : 'border-stone-200'}`}>
-                      {checkedIngredients.has(i) && <span className="text-white text-xs">✓</span>}
-                    </div>
-                    <span className={`text-base leading-tight ${checkedIngredients.has(i) ? 'line-through text-stone-300' : 'text-stone-600'}`}>{ing}</span>
-                  </li>
-                ))}
-                {/* Lista limpia para impresión */}
-                {scaledIngredients.map((ing, i) => (
-                  <li key={`p-${i}`} className="hidden print-only mb-2">• {ing}</li>
-                ))}
-              </ul>
+            
+            {/* Columna Lateral: Ingredientes */}
+            <aside className="lg:col-span-4 space-y-10 ingredients-grid">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-serif font-bold text-amber-600 flex items-center gap-3">
+                    <span>🥕</span> Ingredientes
+                  </h3>
+                  <div className="flex bg-stone-100 p-1 rounded-xl no-print">
+                    {[1, 2, 4].map(v => (
+                      <button key={v} onClick={() => setPortionScale(v)} className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${portionScale === v ? 'bg-amber-600 text-white' : 'text-stone-400'}`}>{v}x</button>
+                    ))}
+                  </div>
+                </div>
+                <ul className="space-y-4 ingredients-list">
+                  {scaledIngredients.map((ing, i) => (
+                    <li key={i} className="flex items-start gap-4 cursor-pointer group no-print" onClick={() => {
+                      const n = new Set(checkedIngredients);
+                      n.has(i) ? n.delete(i) : n.add(i);
+                      setCheckedIngredients(n);
+                    }}>
+                      <div className={`w-6 h-6 rounded-lg border-2 mt-0.5 shrink-0 flex items-center justify-center transition-all ${checkedIngredients.has(i) ? 'bg-amber-600 border-amber-600 scale-90' : 'border-stone-200 group-hover:border-amber-400'}`}>
+                        {checkedIngredients.has(i) && <span className="text-white text-[10px]">✓</span>}
+                      </div>
+                      <span className={`text-base leading-snug transition-all ${checkedIngredients.has(i) ? 'line-through text-stone-300' : 'text-stone-600'}`}>{ing}</span>
+                    </li>
+                  ))}
+                  {/* Vista Impresión */}
+                  {scaledIngredients.map((ing, i) => (
+                    <li key={`p-${i}`} className="hidden print-only">• {ing}</li>
+                  ))}
+                </ul>
+              </div>
 
-              {/* Tips del Chef */}
-              <div className="chef-tips p-8 bg-amber-50 rounded-[2.5rem] border border-amber-100">
-                <h4 className="text-xs font-black text-amber-600 uppercase tracking-widest mb-4">Secretos del Chef</h4>
+              <div className="chef-tips p-8 bg-amber-50 rounded-[2.5rem] border border-amber-100 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" /></svg>
+                </div>
+                <h4 className="text-xs font-black text-amber-600 uppercase tracking-widest mb-4">Consejos Maestro</h4>
                 <ul className="space-y-4">
                   {recipe.tips.map((tip, i) => (
-                    <li key={i} className="text-sm italic text-amber-900/70 leading-relaxed">"{tip}"</li>
+                    <li key={i} className="text-sm italic text-amber-900/70 leading-relaxed font-serif">"{tip}"</li>
                   ))}
                 </ul>
               </div>
             </aside>
 
-            {/* Pasos */}
-            <main className="lg:col-span-8 space-y-8 steps-container">
+            {/* Columna Principal: Pasos */}
+            <main className="lg:col-span-8 space-y-10 steps-container">
               <h3 className="text-2xl font-serif font-bold text-amber-600 flex items-center gap-3">
-                <span>🍳</span> Preparación
+                <span>👨‍🍳</span> Elaboración
               </h3>
               <div className="space-y-6">
-                {recipe.steps.map((step, i) => (
-                  <div 
-                    key={i} 
-                    onClick={() => setActiveStep(i)}
-                    className={`step-card p-8 rounded-[2rem] border-2 transition-all cursor-pointer ${i === activeStep ? 'border-amber-500 bg-amber-50/20 shadow-xl' : 'border-stone-100 hover:border-stone-200'}`}
-                  >
-                    <div className="flex gap-6 items-start">
-                      <span className={`step-num w-12 h-12 rounded-2xl flex items-center justify-center font-black shrink-0 text-xl ${i === activeStep ? 'bg-amber-600 text-white' : 'bg-stone-100 text-stone-300'}`}>{i + 1}</span>
-                      <p className={`text-xl leading-relaxed ${i === activeStep ? (isKitchenMode ? 'text-white' : 'text-stone-800') : 'text-stone-300'}`}>{step}</p>
+                {recipe.steps.map((step, i) => {
+                  const stepTime = detectTime(step);
+                  const isCurrentTimer = activeTimerStep === i;
+                  const isActive = i === activeStep;
+
+                  return (
+                    <div 
+                      key={i} 
+                      onClick={() => setActiveStep(i)}
+                      className={`p-8 rounded-[2.5rem] border-2 transition-all cursor-pointer relative group ${isActive ? 'border-amber-500 bg-amber-50/20 shadow-xl' : 'border-stone-100 hover:border-stone-200 hover:translate-x-1'}`}
+                    >
+                      <div className="flex gap-8 items-start">
+                        <span className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black shrink-0 text-xl transition-all ${isActive ? 'bg-amber-600 text-white shadow-lg rotate-3' : 'bg-stone-100 text-stone-300'}`}>
+                          {i + 1}
+                        </span>
+                        <div className="flex-1 space-y-6">
+                          <p className={`text-xl leading-relaxed font-medium transition-colors ${isActive ? (isKitchenMode ? 'text-white' : 'text-stone-800') : 'text-stone-300'}`}>
+                            {step}
+                          </p>
+                          
+                          {stepTime && (
+                            <div className="flex items-center gap-4 pt-2 no-print">
+                              {!isCurrentTimer ? (
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); startTimer(stepTime, i); }}
+                                  className="flex items-center gap-3 px-6 py-3 bg-amber-100 text-amber-700 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] hover:bg-amber-600 hover:text-white transition-all shadow-sm"
+                                >
+                                  <span>⏲️</span> Iniciar {stepTime} min
+                                </button>
+                              ) : (
+                                <div className="flex items-center gap-3 bg-stone-900 text-white px-4 py-2 rounded-2xl animate-pulse">
+                                  <span className="text-xs font-black tabular-nums">Paso en tiempo: {Math.floor(timerSeconds! / 60)}:{String(timerSeconds! % 60).padStart(2, '0')}</span>
+                                  <button onClick={(e) => { e.stopPropagation(); setTimerSeconds(null); setActiveTimerStep(null); }} className="text-red-400 text-xs">Parar</button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </main>
           </div>
         </div>
 
-        {/* Footer Controles */}
-        <footer className="p-8 border-t border-stone-100 bg-stone-50/50 flex flex-wrap gap-4 no-print">
+        {/* Footer Dinámico */}
+        <footer className="p-10 border-t border-stone-100 bg-stone-50/80 backdrop-blur-md flex flex-wrap gap-6 no-print items-center">
           <button 
             onClick={() => {
-              if(!voiceEnabled) speak("Hola cocinero. Puedes decir: Siguiente, Atrás o Pon un temporizador.");
+              if(!voiceEnabled) speak("Voz activada. Controla la receta con tu voz.");
               setVoiceEnabled(!voiceEnabled);
             }}
-            className={`flex-1 min-w-[200px] py-6 rounded-2xl font-black text-xs tracking-widest transition-all flex items-center justify-center gap-3 ${voiceEnabled ? 'bg-amber-600 text-white animate-pulse' : 'bg-white text-stone-900 border border-stone-200 shadow-sm hover:shadow-md'}`}
+            className={`flex-1 min-w-[280px] py-6 rounded-[2rem] font-black text-xs tracking-widest transition-all flex items-center justify-center gap-4 shadow-xl active:scale-95 ${voiceEnabled ? 'bg-red-500 text-white animate-pulse' : 'bg-stone-900 text-white hover:bg-black'}`}
           >
-            {voiceEnabled ? '🎤 ESCUCHANDO COMANDOS' : '🎙️ ACTIVAR ASISTENTE VOZ'}
+            {voiceEnabled ? (
+              <>
+                <div className="flex gap-1">
+                  <div className="w-1 h-3 bg-white/50 rounded-full animate-voice-bar-1"></div>
+                  <div className="w-1 h-5 bg-white rounded-full animate-voice-bar-2"></div>
+                  <div className="w-1 h-3 bg-white/50 rounded-full animate-voice-bar-3"></div>
+                </div>
+                <span>ESCUCHANDO RECETA...</span>
+              </>
+            ) : (
+              <>
+                <span>🎤 ACTIVAR ASISTENTE</span>
+              </>
+            )}
           </button>
           
-          <div className="flex gap-3 w-full sm:w-auto">
-            <button onClick={() => window.print()} className="flex-1 sm:flex-none px-8 py-6 rounded-2xl font-black text-xs tracking-widest bg-white border border-stone-200 text-stone-900 hover:bg-stone-100 transition-all">🖨️ IMPRIMIR</button>
-            <button onClick={() => setIsKitchenMode(!isKitchenMode)} className="flex-1 sm:flex-none px-8 py-6 rounded-2xl font-black text-xs tracking-widest bg-stone-900 text-white hover:bg-black transition-all">{isKitchenMode ? 'SALIR MODO XXL' : '🍳 MODO COCINA'}</button>
+          <div className="flex gap-4">
+            <button onClick={() => window.print()} className="px-10 py-6 rounded-[2rem] font-black text-[10px] tracking-widest bg-white border border-stone-200 text-stone-900 hover:shadow-lg transition-all flex items-center gap-3">
+              <span>🖨️</span> IMPRIMIR
+            </button>
+            <button onClick={() => setIsKitchenMode(!isKitchenMode)} className={`px-10 py-6 rounded-[2rem] font-black text-[10px] tracking-widest transition-all flex items-center gap-3 ${isKitchenMode ? 'bg-amber-600 text-white shadow-lg' : 'bg-stone-200 text-stone-600 hover:bg-stone-300'}`}>
+              <span>🍳</span> {isKitchenMode ? 'MODO NORMAL' : 'MODO COCINA'}
+            </button>
           </div>
         </footer>
         
-        <div className="voice-feedback-ui no-print">
-           <VoiceFeedback status={status} />
-        </div>
+        <VoiceFeedback status={status} />
       </div>
+
+      <style>{`
+        @keyframes voice-bar-1 { 0%, 100% { height: 8px; } 50% { height: 16px; } }
+        @keyframes voice-bar-2 { 0%, 100% { height: 16px; } 50% { height: 24px; } }
+        @keyframes voice-bar-3 { 0%, 100% { height: 8px; } 50% { height: 16px; } }
+        .animate-voice-bar-1 { animation: voice-bar-1 0.6s ease-in-out infinite; }
+        .animate-voice-bar-2 { animation: voice-bar-2 0.6s ease-in-out infinite 0.1s; }
+        .animate-voice-bar-3 { animation: voice-bar-3 0.6s ease-in-out infinite 0.2s; }
+      `}</style>
     </div>
   );
 };
