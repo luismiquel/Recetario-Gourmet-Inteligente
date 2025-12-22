@@ -27,7 +27,6 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
       recognitionRef.current.start();
     } catch (e: any) {
       isStartingRef.current = false;
-      // Silenciosamente ignorar si ya está iniciado
     }
   }, [enabled]);
 
@@ -38,7 +37,7 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
 
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
-      recognition.lang = 'es-ES';
+      recognition.lang = 'es-ES'; // Idioma forzado a español
       recognition.continuous = false; 
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
@@ -71,7 +70,7 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
       recognition.onerror = (event: any) => {
         isStartingRef.current = false;
         if (event.error === 'aborted' || event.error === 'no-speech') return;
-        console.warn("Voice Error:", event.error);
+        console.warn("Error de voz:", event.error);
       };
 
       recognition.onresult = (event: any) => {
@@ -116,8 +115,8 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     synthRef.current.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'es-ES';
-    utterance.rate = 1.1; // Ligeramente más rápido para fluidez
+    utterance.lang = 'es-ES'; // Síntesis en español
+    utterance.rate = 1.0;
     utterance.pitch = 1.0;
     
     setStatus('speaking');
@@ -127,7 +126,7 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
       if (isMounted.current && enabled) {
         setTimeout(() => {
             if (isMounted.current && enabled) startListening();
-        }, 450); // Delay de seguridad para evitar eco
+        }, 450);
       } else {
         setStatus('idle');
       }

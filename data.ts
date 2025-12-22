@@ -1,109 +1,129 @@
 
 import { Recipe } from './types';
 
-// Motor de generación de contenido técnico para evitar la monotonía
-const getTechnicalContent = (title: string, category: string) => {
-  const t = title.toLowerCase();
-  
-  let steps: string[] = [];
-  let ingredients: string[] = [];
-  let tips: string[] = [];
-
-  // Lógica basada en técnica detectada en el nombre
-  if (t.includes('arroz') || t.includes('risotto')) {
-    ingredients = ['Arroz variedad Bomba o Carnaroli', 'Caldo de ave o pescado reducido', 'Mantequilla fría', 'Parmesano 24 meses'];
-    steps = [
-      "Sofreír la base de verduras finamente picada hasta que esté transparente.",
-      "Nacarar el arroz durante 2 minutos para sellar el almidón.",
-      "Añadir el caldo hirviendo cazo a cazo, removiendo constantemente para liberar el almidón.",
-      "Mantener el fuego medio y finalizar con el mantecado fuera del fuego."
-    ];
-    tips = ["Nunca laves el arroz si buscas una textura cremosa.", "Usa siempre caldo casero para un sabor profundo."];
-  } else if (t.includes('crema') || t.includes('sopa')) {
-    ingredients = ['Verdura de temporada', 'Nata líquida 35% MG', 'Aceite de oliva virgen extra', 'Picatostes artesanos'];
-    steps = [
-      "Limpiar y trocear uniformemente los vegetales para una cocción homogénea.",
-      "Pochar con una pizca de sal para extraer los jugos naturales.",
-      "Cocer en el líquido elegido (caldo o agua) hasta que estén tiernos.",
-      "Triturar a máxima potencia y pasar por un chino para una textura de seda."
-    ];
-    tips = ["Añade una patata pequeña para dar cuerpo natural sin usar harinas.", "Un chorrito de limón al final realza todos los sabores."];
-  } else if (t.includes('asado') || t.includes('horno')) {
-    ingredients = ['Pieza principal (carne o pescado)', 'Hierbas aromáticas frescas', 'Vino blanco seco', 'Patatas ratte'];
-    steps = [
-      "Precalentar el horno a la temperatura exacta indicada.",
-      "Sellar la pieza en una sartén a fuego vivo para mantener los jugos internos.",
-      "Disponer en una fuente con las hierbas y el fondo de vino.",
-      "Asar controlando la temperatura corazón para un punto perfecto."
-    ];
-    tips = ["Deja reposar la carne 5 minutos antes de cortar para que los jugos se redistribuyan.", "Hidrata la pieza cada 15 minutos."];
-  } else {
-    // Genérico de alta calidad
-    ingredients = ['Producto base seleccionado', 'Sal Maldon', 'Aceite de Oliva virgen', 'Especias del mundo'];
-    steps = [
-      "Mise en place: organizar todos los elementos a temperatura ambiente.",
-      "Tratamiento térmico adecuado según la naturaleza del producto.",
-      "Control de texturas y puntos de cocción.",
-      "Emplatado minimalista resaltando el ingrediente principal."
-    ];
-    tips = ["La calidad del aceite de oliva define el 50% del éxito del plato.", "Prueba siempre el punto de sal antes de servir."];
+// Perfiles técnicos para generar contenido coherente en español
+const TECNICAS = {
+  arroz: {
+    ing: ['Arroz variedad Bomba', 'Caldo de ave casero', 'Azafrán en hebra', 'Pimiento rojo', 'Judía verde', 'Garrofó'],
+    pasos: [
+      "Sofreír la carne y las verduras en aceite de oliva virgen hasta que doren.",
+      "Añadir el tomate rallado y cocinar hasta que pierda el agua.",
+      "Incorporar el arroz y nacarar durante dos minutos removiendo bien.",
+      "Verter el caldo caliente con el azafrán y cocinar 18 minutos sin remover.",
+      "Dejar reposar 5 minutos con un paño limpio antes de servir."
+    ],
+    tips: ["El secreto está en un buen sofrito muy lento.", "No remuevas el arroz una vez añadas el caldo."]
+  },
+  guiso: {
+    ing: ['Carne de ternera para guisar', 'Patatas monalisa', 'Zanahorias', 'Cebolla blanca', 'Vino tinto de calidad', 'Laurel'],
+    pasos: [
+      "Sellar la carne a fuego fuerte en una olla exprés o tradicional.",
+      "Retirar la carne y pochar la cebolla y zanahoria en ese mismo aceite.",
+      "Añadir el vino y dejar que el alcohol se evapore por completo.",
+      "Reincorporar la carne y cubrir con agua o fondo de carne.",
+      "Cocinar a fuego lento hasta que la carne esté tierna y la salsa trabada."
+    ],
+    tips: ["Chascar las patatas para que suelten el almidón y espesen la salsa.", "Los guisos siempre saben mejor al día siguiente."]
+  },
+  ensalada: {
+    ing: ['Brote de lechuga tierna', 'Tomate de huerta', 'Aceite de oliva virgen extra', 'Sal de escamas', 'Vinagre de Jerez', 'Frutos secos'],
+    pasos: [
+      "Lavar y secar muy bien las hojas verdes para que el aliño se adhiera.",
+      "Cortar los vegetales en tamaños de bocado uniformes.",
+      "Preparar una vinagreta emulsionando el aceite con el vinagre y la sal.",
+      "Combinar los ingredientes en un bol grande justo antes de servir.",
+      "Aliñar y decorar con los frutos secos para aportar un toque crujiente."
+    ],
+    tips: ["Usa siempre un buen vinagre de Jerez para elevar el plato.", "No aliñes la ensalada hasta el último segundo."]
+  },
+  asado: {
+    ing: ['Pieza para asar (Cordero o Pescado)', 'Patatas panadera', 'Ajo', 'Perejil fresco', 'Vino blanco seco', 'Manteca o Aceite'],
+    pasos: [
+      "Precalentar el horno a 180 grados con calor arriba y abajo.",
+      "Preparar una cama de patatas cortadas finas con cebolla en la bandeja.",
+      "Salpimentar la pieza y colocarla sobre las patatas.",
+      "Hornear regando con el jugo y un chorrito de vino cada 20 minutos.",
+      "Subir la potencia al final para conseguir una piel crujiente o dorado perfecto."
+    ],
+    tips: ["Precalentar bien el horno es fundamental.", "Usa un termómetro de cocina para no pasarte de cocción."]
+  },
+  reposteria: {
+    ing: ['Harina de repostería', 'Azúcar blanquilla', 'Huevos camperos', 'Mantequilla sin sal', 'Levadura química', 'Esencia de vainilla'],
+    pasos: [
+      "Tamizar la harina con la levadura para evitar grumos.",
+      "Batir los huevos con el azúcar hasta que doblen su volumen (blanquear).",
+      "Incorporar la mantequilla en pomada y la esencia de vainilla lentamente.",
+      "Añadir los ingredientes secos con movimientos envolventes para no perder aire.",
+      "Hornear sin abrir la puerta hasta que al insertar un palillo salga limpio."
+    ],
+    tips: ["Todos los ingredientes deben estar a temperatura ambiente.", "No batas en exceso una vez añadida la harina."]
   }
-
-  return { steps, ingredients: [...new Set(ingredients)], tips };
 };
 
-const createCategoryPool = (category: Recipe['category'], titles: string[], baseId: number): Recipe[] => {
-  return Array.from({ length: 100 }, (_, i) => {
-    const title = titles[i % titles.length] + (i >= titles.length ? ` Edición ${Math.floor(i/titles.length) + 1}` : '');
-    const { steps, ingredients, tips } = getTechnicalContent(title, category);
-    
-    return {
-      id: baseId + i,
-      title,
-      category,
-      image: `https://picsum.photos/600/400?random=${baseId + i}`,
-      description: `Una propuesta magistral de la cocina ${category} donde el protagonismo absoluto es la técnica y el producto.`,
-      ingredients,
-      steps,
-      tips,
-      time: i % 3 === 0 ? '30 min' : i % 2 === 0 ? '45 min' : '60 min',
-      difficulty: i % 3 === 0 ? 'Baja' : i % 2 === 0 ? 'Media' : 'Alta'
-    };
+const TITULOS_POOL = {
+  aperitivo: [
+    'Gildas clásicas del norte', 'Croquetas de jamón ibérico', 'Brava de patata confitada', 'Ensaladilla rusa gourmet',
+    'Boquerones en vinagre de sidra', 'Pimientos del padrón rellenos', 'Tortilla de patatas trufada', 'Salmorejo cordobés denso',
+    'Gambas al ajillo tradicional', 'Pulpo a la gallega con cachelos', 'Buñuelos de bacalao crujientes', 'Montadito de pringá',
+    'Champiñones al ajillo y guindilla', 'Mejillones al vapor con cítricos', 'Queso manchego en aceite', 'Aceitunas aliñadas de la abuela',
+    'Canapé de salmón y eneldo', 'Tosta de foie con cebolla caramelizada', 'Empanadilla de bonito del norte', 'Calamares a la romana'
+  ],
+  primero: [
+    'Gazpacho andaluz tradicional', 'Sopa de picadillo con huevo', 'Lentejas estofadas con chorizo', 'Arroz a banda con alioli',
+    'Pasta fresca con pesto de albahaca', 'Crema de calabacín y quesito', 'Canelones de la abuela', 'Garbanzos con espinacas',
+    'Risotto de setas silvestres', 'Ensalada César con pollo crujiente', 'Vichyssoise fría de puerros', 'Judías verdes con jamón',
+    'Espaguetis a la carbonara auténtica', 'Minestrone de verduras de temporada', 'Sopa de ajo castellana', 'Marmitaco de bonito',
+    'Lasaña de verduras asadas', 'Crema de calabaza y jengibre', 'Arroz negro con chopitos', 'Menestra de verduras navarras'
+  ],
+  segundo: [
+    'Cochinillo asado al estilo Segovia', 'Bacalao al pil-pil tradicional', 'Solomillo de ternera al cabrales', 'Merluza en salsa verde',
+    'Carrilleras de cerdo al vino tinto', 'Pollo en pepitoria clásica', 'Lubina a la espalda con ajos', 'Cordero lechal al horno',
+    'Albóndigas en salsa de almendras', 'Entrecot a la pimienta verde', 'Rabo de toro estofado', 'Salmón a la naranja y miel',
+    'Costillas de cerdo a la barbacoa', 'Cachopo asturiano XXL', 'Fideuá de marisco valenciana', 'Pato con reducción de higos',
+    'Caldereta de cordero extremeña', 'Trucha a la navarra con jamón', 'Hamburguesa gourmet de buey', 'Zarzuela de pescado y marisco'
+  ],
+  postre: [
+    'Arroz con leche cremoso', 'Tarta de queso tipo La Viña', 'Natillas caseras con galleta', 'Torrijas de leche y canela',
+    'Flan de huevo tradicional', 'Mousse de chocolate al 70%', 'Tarta de Santiago auténtica', 'Crema catalana quemada',
+    'Brownie de nueces y helado', 'Panna cotta de frutos rojos', 'Tiramisú con café expreso', 'Fruta de temporada preparada',
+    'Leche frita con azúcar y canela', 'Bizcocho de yogur esponjoso', 'Coulant de chocolate fluido', 'Milhojas de nata y crema',
+    'Quesada pasiega tradicional', 'Sorbete de limón al cava', 'Tocino de cielo de Jerez', 'Profiteroles rellenos de nata'
+  ]
+};
+
+const generarRecetas = () => {
+  const todas: Recipe[] = [];
+  const categorias: Recipe['category'][] = ['aperitivo', 'primero', 'segundo', 'postre'];
+  
+  categorias.forEach((cat, catIdx) => {
+    for (let i = 0; i < 100; i++) {
+      const pool = TITULOS_POOL[cat];
+      const baseTitle = pool[i % pool.length];
+      const title = i < pool.length ? baseTitle : `${baseTitle} Especial Variante ${Math.floor(i / pool.length)}`;
+      
+      // Asignar técnica basada en palabras clave o categoría
+      let tecnica = TECNICAS.ensalada;
+      if (title.toLowerCase().includes('arroz') || title.toLowerCase().includes('risotto') || title.toLowerCase().includes('fideuá')) tecnica = TECNICAS.arroz;
+      else if (cat === 'postre') tecnica = TECNICAS.reposteria;
+      else if (title.toLowerCase().includes('asado') || title.toLowerCase().includes('horno') || title.toLowerCase().includes('pieza')) tecnica = TECNICAS.asado;
+      else if (cat === 'segundo' || title.toLowerCase().includes('estofado') || title.toLowerCase().includes('salsa')) tecnica = TECNICAS.guiso;
+
+      todas.push({
+        id: (catIdx + 1) * 1000 + i,
+        title,
+        category: cat,
+        image: `https://picsum.photos/600/400?random=${(catIdx + 1) * 1000 + i}`,
+        description: `Disfruta de este increíble ${cat} preparado con ingredientes frescos y la mejor técnica tradicional española. Una receta equilibrada y llena de sabor.`,
+        ingredients: tecnica.ing,
+        steps: tecnica.pasos,
+        tips: tecnica.tips,
+        time: i % 2 === 0 ? '30 min' : '45 min',
+        difficulty: i % 3 === 0 ? 'Baja' : i % 2 === 0 ? 'Media' : 'Alta'
+      });
+    }
   });
+
+  return todas;
 };
 
-const APERITIVO_TITLES = [
-  'Ostras con granizado de manzana', 'Carpaccio de gamba roja', 'Mini brioche de bogavante', 'Macaron de foie y chocolate',
-  'Tartar de ciervo y mostaza', 'Espuma de patata y trufa', 'Croqueta de cecina de León', 'Saquito de filo y morcilla',
-  'Sashimi de lubina y lima', 'Piruleta de queso y sésamo', 'Chupito de guisantes y menta', 'Bombón de jamón ibérico',
-  'Navajas con aire de limón', 'Mini taco de atún picante', 'Vieiras con espuma de coral', 'Puerros confitados con romesco',
-  'Brandada de bacalao y miel', 'Empanadilla de confit de pato', 'Tataki de buey y cebolla', 'Queso Idiazabal y tomate'
-];
-
-const PRIMERO_TITLES = [
-  'Risotto de plancton marino', 'Crema de alcachofas y poché', 'Sopa Bullabesa de Marsella', 'Tagliatelle con trufa blanca',
-  'Ravioli de bogavante azul', 'Arroz cremoso de rabo de toro', 'Gazpacho de cereza y pistacho', 'Ensalada de perdiz escabechada',
-  'Sopa de cebolla trufada', 'Crema de coliflor y caviar', 'Pasta con pesto de pistacho', 'Salmorejo trufado',
-  'Consomé de buey clarificado', 'Ensalada Waldorf noble', 'Gnocchi de castaña y salvia', 'Ajoblanco de coco y mango'
-];
-
-const SEGUNDO_TITLES = [
-  'Solomillo Wellington real', 'Rodaballo salvaje al horno', 'Lomo de ciervo al Oporto', 'Cochinillo confitado crujiente',
-  'Bacalao al pil-pil gourmet', 'Pato a la naranja y boniato', 'Presa ibérica con higos', 'Rape a la americana',
-  'Carrilleras al vino noble', 'Lubina en papillote thai', 'Entrecot con mantequilla trufa', 'Pichón asado en su jugo',
-  'Salmonetes con emulsión de hígados', 'Cordero lechal al romero', 'Atún rojo en costra de sésamo', 'Merluza en salsa verde'
-];
-
-const POSTRE_TITLES = [
-  'Soufflé de Grand Marnier', 'Tarta de queso fluida', 'Pavlova de frutos rojos', 'Babá al ron con chantilly',
-  'Milhojas de vainilla Tahití', 'Coulant de pistacho y frambuesa', 'Mousse de chocolate amargo', 'Tarta Tatin con crema',
-  'Sorbete de limón y albahaca', 'Flan de queso y miel', 'Semifrío de mango y coco', 'Peras Bella Helena modernas',
-  'Brownie de chocolate y remolacha', 'Lemon Pie con merengue', 'Torrijas de brioche', 'Panna cotta de lavanda'
-];
-
-export const RECIPES: Recipe[] = [
-  ...createCategoryPool('aperitivo', APERITIVO_TITLES, 100),
-  ...createCategoryPool('primero', PRIMERO_TITLES, 200),
-  ...createCategoryPool('segundo', SEGUNDO_TITLES, 300),
-  ...createCategoryPool('postre', POSTRE_TITLES, 400)
-];
+export const RECIPES: Recipe[] = generarRecetas();
