@@ -12,92 +12,119 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis);
   const isSpeaking = useRef(false);
+  const isListening = useRef(false);
   const restartTimeout = useRef<number | null>(null);
 
-  const startListening = useCallback(() => {
-    if (!recognitionRef.current || !enabled || isSpeaking.current) return;
+  const stopRecognition = useCallback(() => {
+    if (recognitionRef.current && isListening.current) {
+      try {
+        recognitionRef.current.abort();
+        isListening.current = false;
+      } catch (e) {
+        console.error("Error al detener reconocimiento:", e);
+      }
+    }
+  }, []);
+
+  const startRecognition = useCallback(() => {
+    if (!recognitionRef.current || isSpeaking.current || isListening.current || !enabled) return;
+    
     try {
       recognitionRef.current.start();
     } catch (e) {
-      // Ya está escuchando
+      // Si ya está corriendo, abortamos y reintentamos en el siguiente ciclo
+      stopRecognition();
     }
-  }, [enabled]);
+  }, [enabled, stopRecognition]);
 
   useEffect(() => {
     const win = window as unknown as IWindow;
     const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      console.warn("Este navegador no soporta reconocimiento de voz nativo.");
+      setStatus('error');
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'es-ES';
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    if (!recognitionRef.current) {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'es-ES';
+      recognition.continuous = false;
+      recognition.interimResults = false;
 
-    recognition.onstart = () => setStatus('listening');
-    
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript.toLowerCase();
-      setStatus('processing');
-      onCommand(transcript);
-    };
+      recognition.onstart = () => {
+        setStatus('listening');
+        isListening.current = true;
+      };
 
-    recognition.onerror = (event: any) => {
-      if (event.error === 'no-speech') {
-        setStatus('idle');
-        return;
-      }
-      console.warn("Error en el reconocimiento de voz:", event.error);
-      setStatus('error');
-    };
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        console.log("🎤 Comando:", transcript);
+        setStatus('processing');
+        onCommand(transcript);
+      };
 
-    recognition.onend = () => {
-      if (enabled && !isSpeaking.current) {
-        if (restartTimeout.current) window.clearTimeout(restartTimeout.current);
-        restartTimeout.current = window.setTimeout(startListening, 400);
-      } else {
-        setStatus('idle');
-      }
-    };
+      recognition.onerror = (event: any) => {
+        isListening.current = false;
+        if (event.error === 'not-allowed') {
+          console.error("Permiso de micrófono denegado");
+          setStatus('error');
+        } else if (event.error === 'no-speech') {
+          setStatus('idle');
+        }
+      };
 
-    recognitionRef.current = recognition;
-    if (enabled) startListening();
+      recognition.onend = () => {
+        isListening.current = false;
+        if (enabled && !isSpeaking.current) {
+          if (restartTimeout.current) window.clearTimeout(restartTimeout.current);
+          restartTimeout.current = window.setTimeout(startRecognition, 300);
+        } else {
+          setStatus('idle');
+        }
+      };
+
+      recognitionRef.current = recognition;
+    }
+
+    if (enabled) {
+      startRecognition();
+    } else {
+      stopRecognition();
+    }
 
     return () => {
       if (restartTimeout.current) window.clearTimeout(restartTimeout.current);
-      recognition.abort();
+      stopRecognition();
     };
-  }, [enabled, onCommand, startListening]);
+  }, [enabled, onCommand, startRecognition, stopRecognition]);
 
   const speak = useCallback((text: string) => {
     if (!synthRef.current) return;
 
-    if (recognitionRef.current) recognitionRef.current.abort();
-    
+    // Detenemos la escucha para que no se oiga a sí mismo
+    stopRecognition();
     isSpeaking.current = true;
     synthRef.current.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-ES';
     utterance.rate = 1.0;
-    utterance.pitch = 1.0;
     
     utterance.onstart = () => setStatus('speaking');
     
     utterance.onend = () => {
       isSpeaking.current = false;
+      // Esperamos un momento para que el eco del altavoz se disipe antes de escuchar
       if (enabled) {
-        setTimeout(startListening, 800);
+        setTimeout(startRecognition, 700);
       } else {
         setStatus('idle');
       }
     };
 
     synthRef.current.speak(utterance);
-  }, [enabled, startListening]);
+  }, [enabled, startRecognition, stopRecognition]);
 
   return { status, speak };
 };
