@@ -20,7 +20,11 @@ function App() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Ref para restaurar el foco después de cerrar drawers o modales
+  // Estado de Alto Contraste
+  const [isHighContrast, setIsHighContrast] = useState<boolean>(() => {
+    return localStorage.getItem('gourmet_high_contrast') === 'true';
+  });
+
   const shoppingTriggerRef = useRef<HTMLButtonElement>(null);
   const lastActiveElement = useRef<HTMLElement | null>(null);
 
@@ -44,6 +48,15 @@ function App() {
   const [isShoppingListOpen, setIsShoppingListOpen] = useState(false);
 
   useEffect(() => {
+    localStorage.setItem('gourmet_high_contrast', String(isHighContrast));
+    if (isHighContrast) {
+      document.body.classList.add('high-contrast');
+    } else {
+      document.body.classList.remove('high-contrast');
+    }
+  }, [isHighContrast]);
+
+  useEffect(() => {
     const progress: Record<number, number> = {};
     RECIPES.forEach(r => {
       const saved = localStorage.getItem(`recipe_progress_${r.id}`);
@@ -64,13 +77,11 @@ function App() {
     localStorage.setItem('gourmet_custom_times', JSON.stringify(customTimes));
   }, [customTimes]);
 
-  // Gestión de foco al abrir/cerrar la lista de la compra
   useEffect(() => {
     if (isShoppingListOpen) {
       lastActiveElement.current = document.activeElement as HTMLElement;
-      // Pequeño delay para asegurar que el DOM está listo
       setTimeout(() => {
-        const firstBtn = document.querySelector('[aria-label="Cerrar"]') as HTMLElement;
+        const firstBtn = document.querySelector('[aria-label="Cerrar despensa"]') as HTMLElement;
         firstBtn?.focus();
       }, 100);
     } else if (lastActiveElement.current) {
@@ -125,8 +136,8 @@ function App() {
   if (showLanding) return <LandingPage onEnter={() => setShowLanding(false)} />;
 
   return (
-    <div className="min-h-screen bg-stone-50 pb-20 animate-fade-in selection:bg-amber-200">
-      {/* Shopping List Drawer (Accesibilidad mejorada) */}
+    <div className={`min-h-screen bg-stone-50 pb-20 animate-fade-in selection:bg-amber-200 ${isHighContrast ? 'high-contrast' : ''}`}>
+      {/* Shopping List Drawer */}
       {isShoppingListOpen && (
         <div 
           className="fixed inset-0 z-[60] overflow-hidden" 
@@ -140,7 +151,7 @@ function App() {
             aria-hidden="true"
           ></div>
           <div className="absolute inset-y-0 right-0 max-w-full flex">
-            <div className="w-screen max-w-md transform transition-transform animate-slide-left bg-white shadow-2xl flex flex-col">
+            <div className="w-screen max-w-md transform transition-transform animate-slide-left bg-white shadow-2xl flex flex-col border-l border-stone-200">
               <div className="p-8 border-b border-stone-100 flex justify-between items-center">
                 <h2 id="shopping-title" className="text-2xl font-serif font-bold text-stone-900">Tu Despensa</h2>
                 <button 
@@ -192,8 +203,17 @@ function App() {
             <span className="text-3xl" aria-hidden="true">👨‍🍳</span>
             <h1 className="text-2xl font-serif font-bold text-stone-800 tracking-tight">Gourmet<span className="text-amber-600">Voice</span></h1>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="relative hidden md:block">
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <button 
+              onClick={() => setIsHighContrast(!isHighContrast)} 
+              className={`p-2.5 rounded-full transition-colors focus:ring-2 focus:ring-amber-500 outline-none ${isHighContrast ? 'bg-stone-900 text-white border-2 border-white' : 'text-stone-400 hover:bg-stone-100'}`}
+              aria-pressed={isHighContrast}
+              title={isHighContrast ? "Desactivar alto contraste" : "Activar alto contraste"}
+            >
+              <span className="sr-only">Alto contraste</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+            <div className="relative hidden lg:block">
               <label htmlFor="search-input" className="sr-only">Buscar recetas</label>
               <input 
                 id="search-input"
@@ -201,7 +221,7 @@ function App() {
                 placeholder="Buscar..." 
                 value={searchQuery} 
                 onChange={(e) => setSearchQuery(e.target.value)} 
-                className="pl-10 pr-4 py-2 border border-stone-200 rounded-full bg-stone-50 focus:ring-2 focus:ring-amber-500 w-64 text-sm focus:outline-none" 
+                className="pl-10 pr-4 py-2 border border-stone-200 rounded-full bg-stone-50 focus:ring-2 focus:ring-amber-500 w-48 xl:w-64 text-sm focus:outline-none" 
               />
               <svg className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>

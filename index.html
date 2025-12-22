@@ -40,6 +40,61 @@
         .ingredients-list { columns: 2; margin: 1cm 0; }
         .step-item { page-break-inside: avoid; margin-bottom: 0.5cm; border-bottom: 1px solid #eee; padding-bottom: 0.5cm; }
       }
+
+      /* MODO ALTO CONTRASTE */
+      .high-contrast {
+        background-color: #000 !important;
+        color: #fff !important;
+      }
+      .high-contrast * {
+        background-image: none !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      .high-contrast .bg-white, 
+      .high-contrast .bg-stone-50, 
+      .high-contrast .bg-stone-100 {
+        background-color: #000 !important;
+        color: #fff !important;
+        border: 2px solid #fff !important;
+      }
+      .high-contrast button, 
+      .high-contrast [role="button"] {
+        background-color: #000 !important;
+        color: #ffff00 !important;
+        border: 2px solid #ffff00 !important;
+      }
+      .high-contrast button:hover, 
+      .high-contrast button:focus {
+        background-color: #ffff00 !important;
+        color: #000 !important;
+      }
+      .high-contrast .text-amber-600, 
+      .high-contrast .text-amber-500, 
+      .high-contrast .text-stone-500 {
+        color: #ffff00 !important;
+      }
+      .high-contrast .bg-amber-600, 
+      .high-contrast .bg-stone-900 {
+        background-color: #000 !important;
+        border: 2px solid #fff !important;
+      }
+      .high-contrast img {
+        filter: grayscale(100%) contrast(150%) !important;
+        opacity: 0.5 !important;
+      }
+      .high-contrast input {
+        background-color: #000 !important;
+        color: #fff !important;
+        border: 2px solid #ffff00 !important;
+      }
+      .high-contrast .border-stone-200, 
+      .high-contrast .border-stone-800, 
+      .high-contrast .border-stone-100 {
+        border-color: #fff !important;
+      }
     </style>
     <script type="importmap">
     {
@@ -51,7 +106,7 @@
     }
     </script>
   </head>
-  <body class="bg-stone-50 text-stone-800 antialiased overflow-x-hidden">
+  <body class="bg-stone-50 text-stone-800 antialiased overflow-x-hidden transition-colors duration-300">
     <div id="root"></div>
   </body>
 </html>
