@@ -12,14 +12,14 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis);
   const isSpeaking = useRef(false);
-  const shouldRestart = useRef(true);
+  const restartTimeout = useRef<number | null>(null);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current || !enabled || isSpeaking.current) return;
     try {
       recognitionRef.current.start();
     } catch (e) {
-      // Ya iniciado o error silencioso
+      // Reconocimiento ya iniciado
     }
   }, [enabled]);
 
@@ -43,25 +43,25 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     };
 
     recognition.onerror = (event: any) => {
-      if (event.error === 'no-speech') return;
-      console.warn("Reconocimiento:", event.error);
+      if (event.error === 'no-speech' || event.error === 'aborted') return;
+      console.warn("Voz error:", event.error);
       setStatus('error');
     };
 
     recognition.onend = () => {
-      if (enabled && shouldRestart.current && !isSpeaking.current) {
-        setTimeout(startListening, 300);
+      if (enabled && !isSpeaking.current) {
+        if (restartTimeout.current) window.clearTimeout(restartTimeout.current);
+        restartTimeout.current = window.setTimeout(startListening, 300);
       } else {
         setStatus('idle');
       }
     };
 
     recognitionRef.current = recognition;
-
     if (enabled) startListening();
 
     return () => {
-      shouldRestart.current = false;
+      if (restartTimeout.current) window.clearTimeout(restartTimeout.current);
       recognition.abort();
     };
   }, [enabled, onCommand, startListening]);
@@ -69,7 +69,7 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
   const speak = useCallback((text: string) => {
     if (!synthRef.current) return;
 
-    // Detener escucha para no oírse a sí mismo
+    // Silenciamos micro para no escucharnos
     if (recognitionRef.current) recognitionRef.current.abort();
     
     isSpeaking.current = true;
@@ -77,14 +77,15 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-ES';
-    utterance.rate = 1.0;
+    utterance.rate = 1.05; // Un poco más rápido para fluidez
+    utterance.pitch = 1.0;
     
     utterance.onstart = () => setStatus('speaking');
     
     utterance.onend = () => {
       isSpeaking.current = false;
       if (enabled) {
-        setTimeout(startListening, 500);
+        setTimeout(startListening, 600);
       } else {
         setStatus('idle');
       }

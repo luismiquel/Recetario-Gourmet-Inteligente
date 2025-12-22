@@ -6,15 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>GourmetVoice - Tu Asistente de Cocina Inteligente</title>
     
-    <!-- SEO & Social Media -->
-    <meta name="description" content="Recetario interactivo con control por voz manos libres. La experiencia definitiva para cocinar sin tocar la pantalla." />
-    <meta property="og:title" content="GourmetVoice - Cocina con libertad" />
-    <meta property="og:description" content="Asistente de voz nativo para tus recetas favoritas." />
-    <meta property="og:type" content="website" />
-    <meta name="theme-color" content="#1c1917" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700;900&display=swap');
@@ -30,71 +21,32 @@
       .scrollbar-hide::-webkit-scrollbar { display: none; }
       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-      /* Estilos para impresión gourmet */
+      /* ESTILOS DE IMPRESIÓN PROFESIONAL */
       @media print {
-        nav, footer, button, .no-print { display: none !important; }
+        @page { size: A4; margin: 2cm; }
+        nav, footer, button, .no-print, .voice-feedback-ui { display: none !important; }
         body { background: white !important; color: black !important; }
-        .print-container { display: block !important; padding: 2cm; }
-        .recipe-image { max-height: 10cm; width: 100%; object-fit: cover; border-radius: 1rem; }
-        h1 { font-size: 32pt; margin-bottom: 0.5cm; }
-        .ingredients-list { columns: 2; margin: 1cm 0; }
-        .step-item { page-break-inside: avoid; margin-bottom: 0.5cm; border-bottom: 1px solid #eee; padding-bottom: 0.5cm; }
+        
+        .print-only { display: block !important; }
+        .recipe-content { display: block !important; position: static !important; width: 100% !important; height: auto !important; overflow: visible !important; }
+        
+        .recipe-header { border-bottom: 2px solid #000; margin-bottom: 1cm; padding-bottom: 0.5cm; }
+        .recipe-title { font-size: 28pt !important; color: black !important; }
+        
+        .ingredients-grid { display: block !important; margin-bottom: 1cm; }
+        .ingredients-list { columns: 2; column-gap: 1cm; font-size: 11pt; list-style-type: square; }
+        
+        .steps-container { page-break-before: auto; }
+        .step-card { border: none !important; border-bottom: 1px solid #eee !important; padding: 15pt 0 !important; page-break-inside: avoid; }
+        .step-num { color: #666 !important; font-weight: bold; margin-right: 10pt; }
+        
+        .chef-tips { background: #f9f9f9 !important; padding: 15pt; border-radius: 8pt; border: 1px solid #ddd; margin-top: 1cm; }
       }
 
       /* MODO ALTO CONTRASTE */
-      .high-contrast {
-        background-color: #000 !important;
-        color: #fff !important;
-      }
-      .high-contrast * {
-        background-image: none !important;
-        box-shadow: none !important;
-        text-shadow: none !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-      }
-      .high-contrast .bg-white, 
-      .high-contrast .bg-stone-50, 
-      .high-contrast .bg-stone-100 {
-        background-color: #000 !important;
-        color: #fff !important;
-        border: 2px solid #fff !important;
-      }
-      .high-contrast button, 
-      .high-contrast [role="button"] {
-        background-color: #000 !important;
-        color: #ffff00 !important;
-        border: 2px solid #ffff00 !important;
-      }
-      .high-contrast button:hover, 
-      .high-contrast button:focus {
-        background-color: #ffff00 !important;
-        color: #000 !important;
-      }
-      .high-contrast .text-amber-600, 
-      .high-contrast .text-amber-500, 
-      .high-contrast .text-stone-500 {
-        color: #ffff00 !important;
-      }
-      .high-contrast .bg-amber-600, 
-      .high-contrast .bg-stone-900 {
-        background-color: #000 !important;
-        border: 2px solid #fff !important;
-      }
-      .high-contrast img {
-        filter: grayscale(100%) contrast(150%) !important;
-        opacity: 0.5 !important;
-      }
-      .high-contrast input {
-        background-color: #000 !important;
-        color: #fff !important;
-        border: 2px solid #ffff00 !important;
-      }
-      .high-contrast .border-stone-200, 
-      .high-contrast .border-stone-800, 
-      .high-contrast .border-stone-100 {
-        border-color: #fff !important;
-      }
+      .high-contrast { background-color: #000 !important; color: #fff !important; }
+      .high-contrast .bg-white, .high-contrast .bg-stone-50 { background-color: #000 !important; border: 1px solid #fff !important; }
+      .high-contrast button { border: 2px solid #ffff00 !important; color: #ffff00 !important; background: #000 !important; }
     </style>
     <script type="importmap">
     {
@@ -106,7 +58,7 @@
     }
     </script>
   </head>
-  <body class="bg-stone-50 text-stone-800 antialiased overflow-x-hidden transition-colors duration-300">
+  <body class="bg-stone-50 text-stone-800 antialiased overflow-x-hidden">
     <div id="root"></div>
   </body>
 </html>
