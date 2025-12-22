@@ -24,7 +24,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
         <div className="space-y-8 animate-fade-in-up">
           <div className="inline-block">
             <span className="block text-amber-500 text-xs font-black tracking-[0.5em] uppercase mb-4 opacity-0 animate-slide-down delay-100">
-              Alta Cocina a tu Alcance
+              Alta Cocina Independiente
             </span>
             <div className="h-px w-12 bg-amber-600 mx-auto opacity-50" aria-hidden="true"></div>
           </div>
@@ -34,7 +34,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
           </h1>
           
           <p className="text-stone-300 text-lg md:text-xl font-light max-w-2xl mx-auto leading-relaxed opacity-0 animate-fade-in delay-300">
-            Descubre el arte de cocinar con libertad. Un recetario inteligente diseñado para guiarte paso a paso mediante comandos de voz.
+            Domina el arte culinario con libertad absoluta. Un asistente nativo, privado y veloz diseñado para cocinar sin tocar la pantalla.
           </p>
 
           <div className="pt-8 opacity-0 animate-slide-up delay-500">
@@ -43,7 +43,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
               className="group relative inline-flex items-center gap-4 px-12 py-5 bg-white text-stone-950 rounded-full font-black text-xs tracking-[0.3em] uppercase transition-all hover:bg-amber-600 hover:text-white active:scale-95 shadow-2xl focus:ring-4 focus:ring-amber-500 outline-none"
               aria-label="Entrar a la aplicación GourmetVoice"
             >
-              <span>Entrar a la Cocina</span>
+              <span>Encender Fogones</span>
               <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
@@ -55,11 +55,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
       {/* Decorative Bottom Info */}
       <footer className="absolute bottom-12 left-12 right-12 flex justify-between items-center text-[10px] font-bold text-stone-500 tracking-[0.2em] uppercase hidden md:flex opacity-0 animate-fade-in delay-700">
         <div className="flex gap-8">
-          <span>200+ Recetas</span>
-          <span>Control por Voz</span>
+          <span>400 Recetas Locales</span>
+          <span>Privacidad Garantizada</span>
         </div>
         <div>
-          <span>© 2024 GourmetVoice Studio</span>
+          <span>© 2024 Desarrollado por Tu Nombre - Todos los derechos reservados</span>
         </div>
       </footer>
       
