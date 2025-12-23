@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>GourmetVoice - Tu Asistente de Cocina Inteligente</title>
     
-    <!-- Meta etiquetas para Vercel / SEO -->
-    <meta name="description" content="Recetario inteligente con control por voz. Cocina con manos libres con técnicas de alta cocina." />
+    <meta name="description" content="Recetario inteligente con control por voz. Cocina con manos libres." />
     <meta property="og:title" content="GourmetVoice - Chef Inteligente" />
     <meta property="og:description" content="Controla tus recetas con la voz. 100% privado y nativo." />
     <meta property="og:type" content="website" />
@@ -28,7 +27,6 @@
       .scrollbar-hide::-webkit-scrollbar { display: none; }
       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-      /* Animación de Ondas de Voz */
       @keyframes voice-wave {
         0%, 100% { height: 8px; opacity: 0.3; }
         50% { height: 28px; opacity: 1; }
@@ -41,23 +39,13 @@
       }
       .wave-delay-1 { animation-delay: 0.1s; }
       .wave-delay-2 { animation-delay: 0.2s; }
-      .wave-delay-3 { animation-delay: 0.3s; }
-      .wave-delay-4 { animation-delay: 0.4s; }
 
-      /* Transiciones de desenfoque gourmet */
       .glass-card {
         backdrop-filter: blur(0px);
         transition: backdrop-filter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
       }
       .group:hover .glass-card {
         backdrop-filter: blur(12px);
-      }
-
-      @media print {
-        @page { size: A4; margin: 2cm; }
-        nav, footer, button, .no-print, .voice-feedback-ui { display: none !important; }
-        body { background: white !important; color: black !important; }
-        .recipe-content { display: block !important; width: 100% !important; height: auto !important; }
       }
     </style>
     <script type="importmap">

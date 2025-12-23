@@ -25,6 +25,7 @@ function App() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [globalVoiceEnabled, setGlobalVoiceEnabled] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   
   const [favorites, setFavorites] = useState<number[]>(() => JSON.parse(localStorage.getItem('gourmet_favorites') || '[]'));
   const [shoppingList, setShoppingList] = useState<string[]>(() => JSON.parse(localStorage.getItem('gourmet_shopping_list') || '[]'));
@@ -41,6 +42,9 @@ function App() {
       else if (c.includes('todo')) setActiveCategory('todos');
     }
 
+    if (c.includes('ayuda') || c.includes('comandos')) setShowHelp(true);
+    if (c.includes('cerrar') && showHelp) setShowHelp(false);
+
     if (c.includes('fácil') || c.includes('baja')) setActiveDifficulty('Baja');
     else if (c.includes('difícil') || c.includes('alta')) setActiveDifficulty('Alta');
     if (c.includes('rápido') || c.includes('corto') || c.includes('30 minutos')) setOnlyQuick(true);
@@ -51,7 +55,7 @@ function App() {
       setActiveDifficulty('todos');
       setOnlyQuick(false);
     }
-  }, []);
+  }, [showHelp]);
 
   const { status, speak } = useVoiceAssistant({
     enabled: globalVoiceEnabled && !isModalOpen,
@@ -59,8 +63,10 @@ function App() {
   });
 
   useEffect(() => {
-    if (globalVoiceEnabled && !isModalOpen) speak("GourmetVoice listo. ¿Qué quieres cocinar?");
-  }, [globalVoiceEnabled]);
+    if (globalVoiceEnabled && !isModalOpen) {
+      speak("GourmetVoice listo. Puedes decir: Muestra postres, o Ayuda.");
+    }
+  }, [globalVoiceEnabled, isModalOpen]);
 
   useEffect(() => { localStorage.setItem('gourmet_favorites', JSON.stringify(favorites)); }, [favorites]);
   useEffect(() => { localStorage.setItem('gourmet_shopping_list', JSON.stringify(shoppingList)); }, [shoppingList]);
@@ -108,7 +114,7 @@ function App() {
           <div className="flex-1 max-w-2xl relative">
             <input 
               type="text" 
-              placeholder="Encuentra tu plato..." 
+              placeholder="Busca por plato o ingrediente..." 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
               className="w-full pl-14 pr-14 py-4 bg-stone-100 rounded-full border-2 border-transparent focus:bg-white focus:border-stone-200 transition-all outline-none text-base font-bold shadow-inner" 
@@ -123,8 +129,11 @@ function App() {
             </button>
           </div>
 
-          <div className="px-5 py-3 bg-stone-900 text-white rounded-2xl shadow-xl font-black text-[11px] hidden lg:block tracking-widest uppercase">
-            {shoppingList.length} Ingredientes
+          <div className="flex items-center gap-4">
+            <button onClick={() => setShowHelp(true)} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-stone-100 text-stone-600 hover:bg-stone-200 transition-all font-black text-xl">?</button>
+            <div className="px-5 py-3 bg-stone-900 text-white rounded-2xl shadow-xl font-black text-[11px] hidden lg:block tracking-widest uppercase">
+              {shoppingList.length} Ingredientes
+            </div>
           </div>
         </nav>
 
@@ -162,7 +171,6 @@ function App() {
                     <span className="text-[400px] font-black absolute -top-32 -left-24 leading-none">{recipe.title.charAt(0)}</span>
                   </div>
                   
-                  {/* Glassmorphism Effect Layer */}
                   <div className="absolute inset-0 bg-white/0 glass-card"></div>
                   
                   <h3 className={`relative z-10 font-serif font-bold text-5xl md:text-6xl text-center leading-[1.05] tracking-tight transition-transform duration-700 group-hover:scale-110 ${catColor.text}`}>
@@ -200,6 +208,31 @@ function App() {
           })}
         </div>
       </main>
+
+      {/* Modal de Ayuda de Voz */}
+      {showHelp && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-stone-950/80 backdrop-blur-xl" onClick={() => setShowHelp(false)}></div>
+          <div className="relative w-full max-w-xl bg-white rounded-[3rem] p-12 shadow-2xl animate-in zoom-in-95 duration-300">
+            <h2 className="text-4xl font-serif font-bold mb-8">Comandos de Voz 🎤</h2>
+            <div className="space-y-6">
+              <div className="p-6 bg-stone-50 rounded-2xl">
+                <p className="text-xs font-black uppercase tracking-widest text-amber-600 mb-2">Para Navegar</p>
+                <p className="text-xl font-bold italic text-stone-700">"Muestra postres", "Pon desayunos", "Ver todos"</p>
+              </div>
+              <div className="p-6 bg-stone-50 rounded-2xl">
+                <p className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-2">Dentro de una Receta</p>
+                <p className="text-xl font-bold italic text-stone-700">"Siguiente", "Anterior", "Repite el paso", "Dime los ingredientes"</p>
+              </div>
+              <div className="p-6 bg-stone-50 rounded-2xl">
+                <p className="text-xs font-black uppercase tracking-widest text-indigo-600 mb-2">Utilidades</p>
+                <p className="text-xl font-bold italic text-stone-700">"Pon un temporizador de 10 minutos", "Cerrar receta"</p>
+              </div>
+            </div>
+            <button onClick={() => setShowHelp(false)} className="mt-10 w-full py-5 bg-stone-900 text-white rounded-full font-black text-xs uppercase tracking-widest">Entendido</button>
+          </div>
+        </div>
+      )}
 
       {selectedRecipe && (
         <RecipeModal 
