@@ -12,7 +12,6 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis);
   
-  // Usar Ref para onCommand para que el useEffect no se reinicie
   const onCommandRef = useRef(onCommand);
   useEffect(() => {
     onCommandRef.current = onCommand;
@@ -41,7 +40,6 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
       recognitionRef.current.start();
     } catch (e) {
       isStartingRef.current = false;
-      // Si ya estaba iniciado, ignoramos el error
       if (e instanceof Error && (e.message.includes('already started') || e.name === 'InvalidStateError')) {
         isListeningRef.current = true;
       }
@@ -72,7 +70,6 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript.toLowerCase();
         setStatus('processing');
-        // Usamos la ref para no tener que reiniciar el efecto
         onCommandRef.current(transcript);
       };
 
@@ -85,16 +82,16 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
           setStatus('error');
         } else {
           console.warn("Recognition error:", event.error);
+          setStatus('idle');
         }
       };
 
       recognition.onend = () => {
         isListeningRef.current = false;
         isStartingRef.current = false;
-        // Solo reiniciamos si sigue habilitado y no estamos hablando
         if (enabled && !isSpeakingRef.current) {
           if (restartTimerRef.current) window.clearTimeout(restartTimerRef.current);
-          restartTimerRef.current = window.setTimeout(startRecognition, 500);
+          restartTimerRef.current = window.setTimeout(startRecognition, 600);
         } else if (!enabled) {
           setStatus('idle');
         }
@@ -119,7 +116,6 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
   const speak = useCallback((text: string) => {
     if (!synthRef.current) return;
 
-    // Detener micro mientras hablamos para evitar eco
     stopRecognition();
     isSpeakingRef.current = true;
     synthRef.current.cancel();
@@ -134,8 +130,7 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     const handleEnd = () => {
       isSpeakingRef.current = false;
       if (enabled) {
-        // Retraso para que el micro no capte el final de la voz
-        setTimeout(startRecognition, 1000);
+        setTimeout(startRecognition, 1200);
       } else {
         setStatus('idle');
       }
