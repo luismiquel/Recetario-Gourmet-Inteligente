@@ -7,13 +7,13 @@ import { LandingPage } from './components/LandingPage';
 import { useVoiceAssistant } from './hooks/useVoiceAssistant';
 import { VoiceFeedback } from './components/VoiceFeedback';
 
-const CATEGORY_COLORS: Record<string, { bg: string, text: string, border: string, accent: string, hover: string }> = {
-  desayuno: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', accent: 'bg-amber-500', hover: 'group-hover:bg-amber-600' },
-  aperitivo: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', accent: 'bg-emerald-500', hover: 'group-hover:bg-emerald-600' },
-  primero: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200', accent: 'bg-indigo-500', hover: 'group-hover:bg-indigo-600' },
-  segundo: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200', accent: 'bg-rose-600', hover: 'group-hover:bg-rose-700' },
-  postre: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', accent: 'bg-violet-500', hover: 'group-hover:bg-violet-600' },
-  todos: { bg: 'bg-stone-50', text: 'text-stone-600', border: 'border-stone-200', accent: 'bg-stone-900', hover: 'group-hover:bg-stone-800' }
+const CATEGORY_COLORS: Record<string, { bg: string, text: string, border: string, accent: string, shadow: string }> = {
+  desayuno: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', accent: 'bg-amber-600', shadow: 'shadow-amber-900/10' },
+  aperitivo: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', accent: 'bg-emerald-600', shadow: 'shadow-emerald-900/10' },
+  primero: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200', accent: 'bg-indigo-600', shadow: 'shadow-indigo-900/10' },
+  segundo: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200', accent: 'bg-rose-600', shadow: 'shadow-rose-900/10' },
+  postre: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', accent: 'bg-violet-600', shadow: 'shadow-violet-900/10' },
+  todos: { bg: 'bg-stone-50', text: 'text-stone-700', border: 'border-stone-200', accent: 'bg-stone-900', shadow: 'shadow-stone-900/10' }
 };
 
 function App() {
@@ -43,7 +43,6 @@ function App() {
 
     if (c.includes('fácil') || c.includes('baja')) setActiveDifficulty('Baja');
     else if (c.includes('difícil') || c.includes('alta')) setActiveDifficulty('Alta');
-
     if (c.includes('rápido') || c.includes('corto') || c.includes('30 minutos')) setOnlyQuick(true);
 
     if (c.includes('limpia') || c.includes('borra') || c.includes('restablece')) {
@@ -60,7 +59,7 @@ function App() {
   });
 
   useEffect(() => {
-    if (globalVoiceEnabled && !isModalOpen) speak("Sistema de voz activo. ¿Qué receta buscamos?");
+    if (globalVoiceEnabled && !isModalOpen) speak("GourmetVoice listo. ¿Qué quieres cocinar?");
   }, [globalVoiceEnabled]);
 
   useEffect(() => { localStorage.setItem('gourmet_favorites', JSON.stringify(favorites)); }, [favorites]);
@@ -99,32 +98,33 @@ function App() {
     <div className={`min-h-screen ${theme.bg} transition-colors duration-1000 pb-24 selection:bg-amber-100`}>
       <VoiceFeedback status={isModalOpen ? 'idle' : status} />
 
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-3xl border-b border-stone-200/50 shadow-sm">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-2xl border-b border-stone-200/50 shadow-sm">
         <nav className="max-w-7xl mx-auto px-6 h-24 flex justify-between items-center gap-4">
-          <div className="flex items-center gap-4 shrink-0 cursor-pointer group" onClick={() => {setActiveCategory('todos'); setSearchQuery(''); setActiveDifficulty('todos'); setOnlyQuick(false);}}>
-             <div className="w-12 h-12 bg-stone-950 rounded-2xl flex items-center justify-center text-2xl text-white font-serif shadow-xl group-hover:rotate-6 transition-transform">G</div>
+          <div className="flex items-center gap-4 shrink-0 cursor-pointer group" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+             <div className="w-12 h-12 bg-stone-900 rounded-2xl flex items-center justify-center text-2xl text-white font-serif shadow-xl group-hover:rotate-6 transition-transform">G</div>
              <h1 className="text-2xl font-serif font-bold tracking-tight hidden sm:block">GourmetVoice</h1>
           </div>
           
-          <div className="flex-1 max-w-2xl relative group">
+          <div className="flex-1 max-w-2xl relative">
             <input 
               type="text" 
-              placeholder="¿Qué te apetece hoy?" 
+              placeholder="Encuentra tu plato..." 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className="w-full pl-14 pr-14 py-4 bg-stone-100/80 rounded-full border-2 border-transparent focus:bg-white focus:border-stone-200 transition-all outline-none text-base font-bold shadow-inner" 
+              className="w-full pl-14 pr-14 py-4 bg-stone-100 rounded-full border-2 border-transparent focus:bg-white focus:border-stone-200 transition-all outline-none text-base font-bold shadow-inner" 
             />
             <div className="absolute left-5 top-1/2 -translate-y-1/2 text-stone-300">🔍</div>
             <button 
               onClick={() => setGlobalVoiceEnabled(!globalVoiceEnabled)} 
-              className={`absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-2xl transition-all ${globalVoiceEnabled ? 'bg-amber-600 text-white animate-pulse shadow-lg scale-110' : 'bg-stone-200 text-stone-400 hover:text-stone-600'}`}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all ${globalVoiceEnabled ? 'bg-amber-600 text-white animate-pulse shadow-lg scale-110' : 'bg-stone-200 text-stone-400 hover:text-stone-600'}`}
+              title="Activar Asistente de Voz"
             >
               🎤
             </button>
           </div>
 
-          <div className="px-5 py-3 bg-stone-900 text-white rounded-2xl shadow-xl font-black text-[11px] hidden lg:block tracking-widest">
-            {shoppingList.length} ITEMS EN LISTA
+          <div className="px-5 py-3 bg-stone-900 text-white rounded-2xl shadow-xl font-black text-[11px] hidden lg:block tracking-widest uppercase">
+            {shoppingList.length} Ingredientes
           </div>
         </nav>
 
@@ -136,7 +136,7 @@ function App() {
               <button 
                 key={cat} 
                 onClick={() => setActiveCategory(cat)} 
-                className={`px-8 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.25em] transition-all border-2 shadow-sm ${
+                className={`px-8 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.2em] transition-all border-2 ${
                   isActive ? `${catTheme.accent} border-transparent text-white scale-105 shadow-md` : `bg-white text-stone-400 border-stone-100 hover:border-stone-300`
                 }`}
               >
@@ -144,24 +144,6 @@ function App() {
               </button>
             );
           })}
-        </div>
-
-        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center gap-8">
-          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Dificultad</span>
-            <div className="flex bg-stone-100 p-1 rounded-full border border-stone-200">
-              {['todos', 'Baja', 'Media', 'Alta'].map(diff => (
-                <button key={diff} onClick={() => setActiveDifficulty(diff)} className={`px-5 py-1.5 rounded-full text-[10px] font-bold transition-all ${activeDifficulty === diff ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}>
-                  {diff === 'todos' ? 'Todas' : diff === 'Baja' ? 'Fácil' : diff}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="h-4 w-px bg-stone-200 hidden md:block"></div>
-          <button onClick={() => setOnlyQuick(!onlyQuick)} className={`flex items-center gap-3 px-6 py-2 rounded-full border-2 transition-all ${onlyQuick ? 'bg-amber-500 border-transparent text-white shadow-md' : 'bg-white border-stone-100 text-stone-400 hover:border-stone-200'}`}>
-            <span className="text-xl">⏱</span>
-            <span className="text-[10px] font-black uppercase tracking-widest">Menos de 30 min</span>
-          </button>
         </div>
       </header>
 
@@ -173,15 +155,15 @@ function App() {
               <article 
                 key={recipe.id} 
                 onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }}
-                className={`group relative bg-white rounded-[4rem] border-2 ${catColor.border} overflow-hidden hover:shadow-[0_60px_120px_rgba(0,0,0,0.15)] transition-all duration-700 cursor-pointer flex flex-col h-[580px] hover:-translate-y-4`}
+                className={`group relative bg-white rounded-[4rem] border-2 ${catColor.border} overflow-hidden hover:shadow-[0_60px_120px_rgba(0,0,0,0.1)] transition-all duration-700 cursor-pointer flex flex-col h-[580px] hover:-translate-y-4`}
               >
-                {/* Visual Experiment: Backdrop Blur on Hover + Color Intensity */}
                 <div className={`relative h-72 flex items-center justify-center p-14 overflow-hidden transition-all duration-700 ${catColor.bg} group-hover:bg-white`}>
                   <div className={`absolute inset-0 opacity-[0.05] pointer-events-none group-hover:opacity-[0.15] transition-opacity ${catColor.text}`}>
                     <span className="text-[400px] font-black absolute -top-32 -left-24 leading-none">{recipe.title.charAt(0)}</span>
                   </div>
-                  {/* Glassmorphism layer on hover */}
-                  <div className="absolute inset-0 bg-white/0 group-hover:backdrop-blur-[8px] transition-all duration-700"></div>
+                  
+                  {/* Glassmorphism Effect Layer */}
+                  <div className="absolute inset-0 bg-white/0 glass-card"></div>
                   
                   <h3 className={`relative z-10 font-serif font-bold text-5xl md:text-6xl text-center leading-[1.05] tracking-tight transition-transform duration-700 group-hover:scale-110 ${catColor.text}`}>
                     {recipe.title}
@@ -194,7 +176,7 @@ function App() {
 
                 <div className="p-14 flex-1 flex flex-col">
                   <div className="flex justify-between items-center mb-10">
-                    <span className={`px-5 py-1.5 rounded-xl text-[12px] font-black uppercase tracking-widest ${catColor.bg} ${catColor.text} group-hover:scale-110 transition-transform duration-500`}>
+                    <span className={`px-5 py-1.5 rounded-xl text-[12px] font-black uppercase tracking-widest ${catColor.bg} ${catColor.text}`}>
                       {recipe.category}
                     </span>
                     <span className="text-[12px] font-black uppercase tracking-widest text-stone-400">⏱ {recipe.time}</span>
