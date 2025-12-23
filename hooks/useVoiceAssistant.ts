@@ -18,19 +18,24 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
   const stopRecognition = useCallback(() => {
     if (recognitionRef.current) {
       try {
+        // Usamos abort() en lugar de stop() para liberar el micro inmediatamente
         recognitionRef.current.abort();
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Silent recognition abort error');
+      }
       isListeningRef.current = false;
     }
   }, []);
 
   const startRecognition = useCallback(() => {
+    // Si el asistente está hablando, ya escuchando o deshabilitado, abortamos
     if (isSpeakingRef.current || isListeningRef.current || !enabled) return;
 
     try {
       recognitionRef.current.start();
     } catch (e) {
-      if (e instanceof Error && e.name === 'InvalidStateError') {
+      // Si el navegador dice que ya está activo, actualizamos nuestra referencia
+      if (e instanceof Error && (e.name === 'InvalidStateError' || e.message.includes('already started'))) {
         isListeningRef.current = true;
       }
     }
@@ -64,11 +69,17 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
 
       recognition.onerror = (event: any) => {
         isListeningRef.current = false;
-        if (event.error === 'no-speech') setStatus('listening');
+        // El error 'no-speech' es normal, simplemente reiniciamos
+        if (event.error === 'no-speech') {
+          setStatus('idle');
+        } else if (event.error === 'not-allowed') {
+          setStatus('error');
+        }
       };
 
       recognition.onend = () => {
         isListeningRef.current = false;
+        // Solo reiniciamos si sigue habilitado y NO estamos hablando
         if (enabled && !isSpeakingRef.current) {
           if (restartTimerRef.current) window.clearTimeout(restartTimerRef.current);
           restartTimerRef.current = window.setTimeout(startRecognition, 400);
@@ -96,6 +107,7 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
   const speak = useCallback((text: string) => {
     if (!synthRef.current) return;
 
+    // Detener escucha inmediatamente antes de hablar
     stopRecognition();
     isSpeakingRef.current = true;
     synthRef.current.cancel();
@@ -110,7 +122,8 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     const handleEnd = () => {
       isSpeakingRef.current = false;
       if (enabled) {
-        setTimeout(startRecognition, 600);
+        // Damos un respiro al hardware de audio antes de volver a escuchar
+        setTimeout(startRecognition, 800);
       } else {
         setStatus('idle');
       }
