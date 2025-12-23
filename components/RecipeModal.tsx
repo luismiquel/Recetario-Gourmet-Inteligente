@@ -2,7 +2,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Recipe, VoiceStatus } from '../types';
 import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
-import { VoiceFeedback } from './VoiceFeedback';
 
 interface RecipeModalProps {
   recipe: Recipe | null;
@@ -40,9 +39,9 @@ const VoiceStatusOrb: React.FC<{ status: VoiceStatus; accentColor: string }> = (
       {status === 'speaking' && (
         <>
           <div className="flex items-center gap-1.5 h-5 text-amber-500">
-            <div className="wave-bar w-[2.5px] h-3"></div>
-            <div className="wave-bar wave-delay-1 w-[2.5px] h-3"></div>
-            <div className="wave-bar wave-delay-2 w-[2.5px] h-3"></div>
+            <div className="w-[3px] h-3 bg-amber-500 rounded-full animate-bounce"></div>
+            <div className="w-[3px] h-3 bg-amber-500 rounded-full animate-bounce delay-75"></div>
+            <div className="w-[3px] h-3 bg-amber-500 rounded-full animate-bounce delay-150"></div>
           </div>
           <span className="text-[11px] font-black uppercase tracking-widest text-amber-600">Hablando</span>
         </>
@@ -67,89 +66,55 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
 
   const theme = recipe ? (CAT_THEMES[recipe.category] || { accent: 'bg-stone-900', text: 'text-stone-900', bg: 'bg-stone-50', ring: 'ring-stone-200' }) : null;
 
-  const handleCommand = (cmd: string) => {
+  const startTimer = useCallback((minutes: number) => {
+    setTimerSeconds(minutes * 60);
+    setIsTimerRunning(true);
+  }, []);
+
+  const nextStep = useCallback(() => {
+    if (!recipe) return;
+    setActiveStep(prev => {
+      const next = Math.min(prev + 1, recipe.steps.length - 1);
+      return next;
+    });
+  }, [recipe]);
+
+  const prevStep = useCallback(() => {
+    setActiveStep(prev => Math.max(prev - 1, 0));
+  }, []);
+
+  // CRÍTICO: Memoizamos handleCommand para no reiniciar el asistente de voz constantemente
+  const handleCommand = useCallback((cmd: string) => {
     if (!recipe) return;
     const c = cmd.toLowerCase();
     
     if (/(siguiente|próximo|adelante|hecho|listo|vale|ok|sigue|dale|tira)/.test(c)) nextStep();
     else if (/(anterior|atrás|vuelve|antes)/.test(c)) prevStep();
-    else if (/(repite|qué|otra vez)/.test(c)) readCurrentStep();
     else if (/(cerrar|salir|terminar)/.test(c)) onClose();
-    else if (/(ingredientes|lista)/.test(c)) { readIngredients(); setViewMode('ingredients'); }
+    else if (/(ingredientes|lista)/.test(c)) setViewMode('ingredients');
     else if (/(pasos|preparación)/.test(c)) setViewMode('full');
     
     if (/(temporizador|pon|cuenta|minutos)/.test(c)) {
       const match = c.match(/(\d+)/);
       if (match) startTimer(parseInt(match[1]));
     }
-  };
+  }, [recipe, nextStep, prevStep, onClose, startTimer]);
 
   const { status, speak } = useVoiceAssistant({
-    enabled: voiceEnabled,
+    enabled: voiceEnabled && isOpen,
     onCommand: handleCommand
   });
 
+  // Al abrir el modal o cambiar de paso, narramos si es necesario
   useEffect(() => {
     if (isOpen && recipe) {
-      setActiveStep(0);
-      const t = setTimeout(() => speak(`${recipe.title} lista. ¿Repasamos ingredientes?`), 600);
-      return () => clearTimeout(t);
-    }
-  }, [isOpen, recipe]);
-
-  const nextStep = useCallback(() => {
-    if (!recipe) return;
-    if (activeStep >= recipe.steps.length - 1) {
-      speak("¡Excelente trabajo Chef! El plato está listo.");
-      return;
-    }
-    const next = activeStep + 1;
-    setActiveStep(next);
-    speak(`Paso ${next + 1}: ${recipe.steps[next]}`);
-  }, [recipe, activeStep, speak]);
-
-  const prevStep = useCallback(() => {
-    if (activeStep <= 0) return;
-    const prev = activeStep - 1;
-    setActiveStep(prev);
-    speak(`Volvemos al paso ${prev + 1}: ${recipe.steps[prev]}`);
-  }, [activeStep, speak]);
-
-  const readCurrentStep = useCallback(() => {
-    if (!recipe) return;
-    speak(`Paso ${activeStep + 1}: ${recipe.steps[activeStep]}`);
-  }, [recipe, activeStep, speak]);
-
-  const readIngredients = useCallback(() => {
-    if (!recipe) return;
-    speak(`Necesitamos: ${recipe.ingredients.join(', ')}.`);
-  }, [recipe, speak]);
-
-  const handleAddToShoppingList = () => {
-    if (!recipe) return;
-    onAddIngredients(recipe.ingredients);
-    setAddedToList(true);
-    speak("Ingredientes añadidos.");
-    setTimeout(() => setAddedToList(false), 3000);
-  };
-
-  const handleShare = async () => {
-    if (!recipe) return;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: `GourmetVoice: ${recipe.title}`, text: `¡Mira esta receta!`, url: window.location.href });
+      if (activeStep === 0 && status === 'idle') {
+        speak(`${recipe.title} lista. ¿Repasamos ingredientes?`);
       } else {
-        await navigator.clipboard.writeText(window.location.href);
-        speak("Enlace copiado.");
+        speak(`Paso ${activeStep + 1}: ${recipe.steps[activeStep]}`);
       }
-    } catch (err) {}
-  };
-
-  const startTimer = (minutes: number) => {
-    setTimerSeconds(minutes * 60);
-    setIsTimerRunning(true);
-    speak(`Reloj a ${minutes} minutos.`);
-  };
+    }
+  }, [activeStep, isOpen, recipe, speak]);
 
   useEffect(() => {
     let interval: number;
@@ -158,7 +123,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
     } else if (timerSeconds === 0) {
       setIsTimerRunning(false);
       setTimerSeconds(null);
-      speak("¡Tiempo finalizado!");
+      speak("¡Tiempo finalizado chef!");
     }
     return () => clearInterval(interval);
   }, [isTimerRunning, timerSeconds, speak]);
@@ -171,118 +136,83 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (isKitchenMode) {
-    return (
-      <div className="fixed inset-0 z-[100] bg-stone-950 text-white flex flex-col overflow-hidden animate-in fade-in duration-700">
-        <header className="p-12 flex justify-between items-center bg-stone-900/80 backdrop-blur-xl border-b border-white/5">
-          <h2 className="text-4xl font-serif font-bold tracking-tight">{recipe.title}</h2>
-          <div className="flex items-center gap-8">
-            <VoiceStatusOrb status={status} accentColor={theme.accent} />
-            <button onClick={() => setIsKitchenMode(false)} className="px-10 py-4 bg-white/10 rounded-full text-xs font-black tracking-widest uppercase border border-white/10">Salir</button>
-          </div>
-        </header>
-
-        <main className="flex-1 flex flex-col items-center justify-center px-32 text-center relative">
-          {timerSeconds !== null && (
-            <div className="absolute top-20 bg-amber-600/20 px-16 py-6 rounded-full border border-amber-600/40 backdrop-blur-md">
-              <span className="text-8xl font-black tabular-nums text-amber-500">{formatTime(timerSeconds)}</span>
-            </div>
-          )}
-          <div className="max-w-[1400px] space-y-16">
-            <span className="inline-block px-12 py-3 bg-white/10 rounded-full text-white/50 font-black text-sm uppercase tracking-[0.6em]">Paso {activeStep + 1} de {recipe.steps.length}</span>
-            <p className="text-7xl md:text-9xl font-sans font-black leading-[1.0] tracking-tighter text-white drop-shadow-2xl">
-              {recipe.steps[activeStep]}
-            </p>
-          </div>
-          <div className="absolute left-0 right-0 bottom-40 flex justify-between px-20">
-            <button onClick={prevStep} disabled={activeStep === 0} className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center transition-all text-4xl disabled:opacity-0">←</button>
-            <button onClick={nextStep} disabled={activeStep === recipe.steps.length - 1} className={`w-32 h-32 ${theme.accent} rounded-full flex items-center justify-center shadow-2xl text-4xl transform hover:scale-110 active:scale-90 transition-all disabled:opacity-0`}>→</button>
-          </div>
-        </main>
-
-        <footer className="p-16 flex flex-col items-center gap-10">
-          <div className="h-3 w-full max-w-4xl bg-white/10 rounded-full overflow-hidden">
-             <div className={`h-full ${theme.accent} transition-all duration-1000 shadow-[0_0_20px_rgba(255,255,255,0.2)]`} style={{ width: `${((activeStep + 1) / recipe.steps.length) * 100}%` }}></div>
-          </div>
-          <button onClick={() => setVoiceEnabled(!voiceEnabled)} className={`w-32 h-32 rounded-full flex items-center justify-center transition-all border-4 ${voiceEnabled ? `${theme.accent} border-white shadow-2xl` : 'bg-stone-800 border-white/10'}`}>
-            <span className="text-5xl">{voiceEnabled ? '🎤' : '🎙️'}</span>
-          </button>
-        </footer>
-      </div>
-    );
-  }
+  const handleAddToShoppingList = () => {
+    onAddIngredients(recipe.ingredients);
+    setAddedToList(true);
+    speak("Ingredientes añadidos.");
+    setTimeout(() => setAddedToList(false), 3000);
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 lg:p-14 animate-in fade-in duration-500 overflow-hidden">
-      <div className="absolute inset-0 bg-stone-950/96 backdrop-blur-3xl" onClick={onClose}></div>
-      <div className="relative w-full max-w-[1600px] h-full bg-white rounded-[4rem] lg:rounded-[6rem] shadow-[0_60px_150px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:p-10 animate-in fade-in duration-500 overflow-hidden">
+      <div className="absolute inset-0 bg-stone-950/90 backdrop-blur-xl" onClick={onClose}></div>
+      
+      <div className="relative w-full max-w-[1400px] h-[90vh] bg-white rounded-[3rem] lg:rounded-[4rem] shadow-2xl flex flex-col overflow-hidden">
         
-        <header className={`shrink-0 pt-20 pb-16 px-16 relative flex flex-col items-center border-b border-stone-100 ${theme.bg}`}>
-           <div className="absolute top-12 right-12 flex gap-4 z-50">
-             <button onClick={handleShare} className="w-16 h-16 bg-white rounded-full flex items-center justify-center transition-all hover:bg-stone-50 border border-stone-100 shadow-sm text-2xl group">
-               <span className="group-hover:scale-125 transition-transform">↗️</span>
-             </button>
-             <button onClick={onClose} className="w-16 h-16 bg-white rounded-full flex items-center justify-center transition-all hover:bg-stone-50 border border-stone-100 shadow-sm text-2xl group">
+        <header className={`shrink-0 pt-12 pb-8 px-10 relative flex flex-col items-center border-b border-stone-100 ${theme.bg}`}>
+           <div className="absolute top-8 right-8 flex gap-3 z-50">
+             <button onClick={onClose} className="w-12 h-12 bg-white rounded-full flex items-center justify-center transition-all hover:bg-stone-50 border border-stone-100 shadow-sm text-xl group">
                <span className="group-hover:rotate-90 transition-transform">✕</span>
              </button>
            </div>
           
-          <h2 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-center tracking-tight leading-[1.0] text-stone-900 mb-14 max-w-5xl">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-center tracking-tight leading-tight text-stone-900 mb-8 max-w-4xl">
             {recipe.title}
           </h2>
 
-          <div className="flex bg-white/95 p-2 rounded-full border border-stone-200/50 backdrop-blur-2xl shadow-lg">
-            <button onClick={() => setViewMode('full')} className={`px-14 py-4 rounded-full text-[12px] font-black uppercase tracking-[0.3em] transition-all ${viewMode === 'full' ? 'bg-stone-900 text-white shadow-xl scale-105' : 'text-stone-400 hover:text-stone-900'}`}>Guía de Cocinado</button>
-            <button onClick={() => setViewMode('ingredients')} className={`px-14 py-4 rounded-full text-[12px] font-black uppercase tracking-[0.3em] transition-all ${viewMode === 'ingredients' ? `${theme.accent} text-white shadow-xl scale-105` : 'text-stone-400 hover:text-stone-900'}`}>Ingredientes</button>
+          <div className="flex bg-white/80 p-1.5 rounded-full border border-stone-200/50 backdrop-blur-xl shadow-sm">
+            <button onClick={() => setViewMode('full')} className={`px-10 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all ${viewMode === 'full' ? 'bg-stone-900 text-white shadow-lg' : 'text-stone-400 hover:text-stone-900'}`}>Guía de Cocinado</button>
+            <button onClick={() => setViewMode('ingredients')} className={`px-10 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all ${viewMode === 'ingredients' ? `${theme.accent} text-white shadow-lg` : 'text-stone-400 hover:text-stone-900'}`}>Ingredientes</button>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-16 md:p-24 lg:p-32 scrollbar-hide bg-white">
-          <div className={`transition-all duration-700 ease-in-out ${viewMode === 'ingredients' ? 'max-w-6xl mx-auto' : 'grid lg:grid-cols-12 gap-24 lg:gap-40'}`}>
-            <aside className={`${viewMode === 'ingredients' ? 'lg:col-span-12' : 'lg:col-span-5'} space-y-16`}>
-              <div className="border-b-4 border-stone-100 pb-10 mb-12 flex justify-between items-center">
-                <h3 className="text-4xl font-serif font-bold text-stone-900">Mise en Place</h3>
-                <div className="flex items-center gap-4">
+        <div className="flex-1 overflow-y-auto p-10 md:p-16 lg:p-20 scrollbar-hide bg-white">
+          <div className={`transition-all duration-700 ease-in-out ${viewMode === 'ingredients' ? 'max-w-4xl mx-auto' : 'grid lg:grid-cols-12 gap-16 lg:gap-24'}`}>
+            
+            <aside className={`${viewMode === 'ingredients' ? 'lg:col-span-12' : 'lg:col-span-5'} space-y-10`}>
+              <div className="border-b-2 border-stone-100 pb-6 mb-8 flex justify-between items-center">
+                <h3 className="text-2xl font-serif font-bold text-stone-900">Mise en Place</h3>
+                <div className="flex items-center gap-3">
                   <VoiceStatusOrb status={status} accentColor={theme.accent} />
-                  <button onClick={handleAddToShoppingList} className={`px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-md active:scale-95 ${addedToList ? 'bg-emerald-500' : theme.accent}`}>
+                  <button onClick={handleAddToShoppingList} className={`px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-widest text-white transition-all shadow-md active:scale-95 ${addedToList ? 'bg-emerald-500' : theme.accent}`}>
                     {addedToList ? '✓ AÑADIDO' : '+ LISTA COMPRA'}
                   </button>
                 </div>
               </div>
               
-              <ul className={`grid gap-10 ${viewMode === 'ingredients' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+              <ul className={`grid gap-4 ${viewMode === 'ingredients' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
                 {recipe.ingredients.map((ing, i) => (
-                  <li key={i} onClick={() => { const n = new Set(checkedIngredients); n.has(i) ? n.delete(i) : n.add(i); setCheckedIngredients(n); }} className="flex items-center gap-8 cursor-pointer group p-5 rounded-[2.5rem] hover:bg-stone-50 transition-all border-2 border-transparent hover:border-stone-100">
-                    <div className={`w-14 h-14 rounded-2xl border-2 transition-all flex items-center justify-center shrink-0 ${checkedIngredients.has(i) ? `${theme.accent} border-transparent shadow-xl` : 'border-stone-200 group-hover:border-stone-400'}`}>
-                      {checkedIngredients.has(i) && <span className="text-white text-2xl font-bold">✓</span>}
+                  <li key={i} onClick={() => { const n = new Set(checkedIngredients); n.has(i) ? n.delete(i) : n.add(i); setCheckedIngredients(n); }} className="flex items-center gap-4 cursor-pointer group p-3 rounded-2xl hover:bg-stone-50 transition-all">
+                    <div className={`w-8 h-8 rounded-lg border-2 transition-all flex items-center justify-center shrink-0 ${checkedIngredients.has(i) ? `${theme.accent} border-transparent` : 'border-stone-200 group-hover:border-stone-400'}`}>
+                      {checkedIngredients.has(i) && <span className="text-white text-xs font-bold">✓</span>}
                     </div>
-                    <span className={`font-sans font-bold text-3xl md:text-4xl tracking-tight leading-tight ${checkedIngredients.has(i) ? 'text-stone-300 line-through opacity-40 italic' : 'text-stone-800'}`}>
+                    <span className={`font-sans font-bold text-lg md:text-xl tracking-tight leading-tight ${checkedIngredients.has(i) ? 'text-stone-300 line-through opacity-40 italic' : 'text-stone-800'}`}>
                       {ing}
                     </span>
                   </li>
                 ))}
               </ul>
-              {viewMode === 'ingredients' && (
-                <div className="mt-24 pt-16 border-t-2 border-stone-100 flex flex-col items-center">
-                  <button onClick={() => setIsKitchenMode(true)} className={`px-32 py-12 ${theme.accent} text-white rounded-full font-black text-2xl uppercase tracking-[0.5em] shadow-2xl hover:scale-105 active:scale-95 transition-all`}>EMPEZAR COCINADO</button>
-                </div>
-              )}
             </aside>
+
             {viewMode === 'full' && (
-              <main className="lg:col-span-7 space-y-20">
-                <div className="flex justify-between items-center border-b-4 border-stone-100 pb-10 mb-12">
-                   <h3 className="text-4xl font-serif font-bold text-stone-900">Preparación</h3>
+              <main className="lg:col-span-7 space-y-8">
+                <div className="flex justify-between items-center border-b-2 border-stone-100 pb-6 mb-8">
+                   <h3 className="text-2xl font-serif font-bold text-stone-900">Preparación</h3>
+                   {timerSeconds !== null && (
+                     <div className="bg-amber-100 px-4 py-1.5 rounded-full border border-amber-200">
+                       <span className="text-amber-700 font-black tabular-nums tracking-wider text-sm">{formatTime(timerSeconds)}</span>
+                     </div>
+                   )}
                 </div>
-                <div className="space-y-12">
+                <div className="space-y-6">
                   {recipe.steps.map((step, i) => (
-                    <div key={i} onClick={() => setActiveStep(i)} className={`p-12 rounded-[4rem] border-4 transition-all cursor-pointer relative group ${activeStep === i ? `border-stone-900 bg-stone-50/50 translate-x-6 shadow-2xl scale-[1.02]` : 'border-transparent opacity-30 hover:opacity-100'}`}>
-                      <div className="flex gap-12">
-                        <span className={`text-7xl font-black opacity-20 transition-all ${activeStep === i ? theme.text : 'text-stone-300'}`}>{String(i + 1).padStart(2, '0')}</span>
-                        <p className={`text-4xl md:text-5xl font-sans font-black leading-[1.3] tracking-tight ${activeStep === i ? 'text-stone-900' : 'text-stone-600'}`}>
+                    <div key={i} onClick={() => setActiveStep(i)} className={`p-8 rounded-[2rem] border-2 transition-all cursor-pointer relative group ${activeStep === i ? `border-stone-900 bg-stone-50 shadow-xl scale-[1.01]` : 'border-transparent opacity-30 hover:opacity-100'}`}>
+                      <div className="flex gap-6">
+                        <span className={`text-4xl font-black opacity-10 ${activeStep === i ? theme.text : 'text-stone-300'}`}>{String(i + 1).padStart(2, '0')}</span>
+                        <p className={`text-xl md:text-2xl font-sans font-black leading-tight tracking-tight ${activeStep === i ? 'text-stone-900' : 'text-stone-600'}`}>
                           {step}
                         </p>
                       </div>
-                      {activeStep === i && <div className={`absolute -left-6 top-1/2 -translate-y-1/2 w-4 h-24 ${theme.accent} rounded-full animate-pulse`}></div>}
                     </div>
                   ))}
                 </div>
@@ -291,14 +221,12 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
           </div>
         </div>
 
-        <footer className="shrink-0 p-16 bg-white border-t border-stone-100 flex gap-12 items-center justify-between">
-          <div className="flex gap-8 flex-1">
-            <button onClick={() => setVoiceEnabled(!voiceEnabled)} className={`flex-1 py-10 rounded-full font-black text-sm tracking-[0.4em] transition-all flex items-center justify-center gap-6 shadow-2xl active:scale-95 ${voiceEnabled ? `${theme.accent} text-white` : 'bg-stone-900 text-white'}`}>
-              <span className="text-4xl">{voiceEnabled ? '🎤' : '🎙️'}</span>
-              {voiceEnabled ? 'ASISTENTE ACTIVO' : 'ACTIVAR VOZ'}
-            </button>
-            <button onClick={() => setIsKitchenMode(true)} className="px-20 py-10 bg-stone-100 rounded-full font-black text-sm uppercase tracking-[0.4em] hover:bg-stone-200 transition-all flex items-center gap-6 active:scale-95">MODO COCINA 🍳</button>
-          </div>
+        <footer className="shrink-0 p-8 bg-white border-t border-stone-100 flex gap-4 items-center justify-between">
+          <button onClick={() => setVoiceEnabled(!voiceEnabled)} className={`flex-1 py-6 rounded-full font-black text-[10px] tracking-[0.3em] transition-all flex items-center justify-center gap-4 shadow-xl active:scale-95 ${voiceEnabled ? `${theme.accent} text-white` : 'bg-stone-900 text-white'}`}>
+            <span className="text-2xl">{voiceEnabled ? '🎤' : '🎙️'}</span>
+            {voiceEnabled ? 'ASISTENTE ACTIVO' : 'ACTIVAR VOZ'}
+          </button>
+          <button onClick={() => setIsKitchenMode(true)} className="px-10 py-6 bg-stone-100 rounded-full font-black text-[10px] uppercase tracking-[0.3em] hover:bg-stone-200 transition-all active:scale-95">ENFOCAR 🍳</button>
         </footer>
       </div>
     </div>
