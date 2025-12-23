@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { IWindow, VoiceStatus } from '../types';
+import { IWindow, VoiceStatus } from '../types.ts';
 
 interface UseVoiceAssistantProps {
   onCommand: (command: string) => void;

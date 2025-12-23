@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { VoiceStatus } from '../types';
+import { VoiceStatus } from '../types.ts';
 
 interface VoiceFeedbackProps {
   status: VoiceStatus;
