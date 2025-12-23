@@ -21,6 +21,22 @@
       .scrollbar-hide::-webkit-scrollbar { display: none; }
       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
+      /* Animación de Ondas de Voz */
+      @keyframes voice-wave {
+        0%, 100% { height: 8px; opacity: 0.3; }
+        50% { height: 28px; opacity: 1; }
+      }
+      .wave-bar {
+        animation: voice-wave 1s ease-in-out infinite;
+        width: 4px;
+        border-radius: 2px;
+        background-color: currentColor;
+      }
+      .wave-delay-1 { animation-delay: 0.1s; }
+      .wave-delay-2 { animation-delay: 0.2s; }
+      .wave-delay-3 { animation-delay: 0.3s; }
+      .wave-delay-4 { animation-delay: 0.4s; }
+
       /* ESTILOS DE IMPRESIÓN PROFESIONAL */
       @media print {
         @page { size: A4; margin: 2cm; }

@@ -7,49 +7,50 @@ import { LandingPage } from './components/LandingPage';
 import { useVoiceAssistant } from './hooks/useVoiceAssistant';
 import { VoiceFeedback } from './components/VoiceFeedback';
 
-const CATEGORY_COLORS: Record<string, { bg: string, text: string, border: string, accent: string }> = {
-  desayuno: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', accent: 'bg-amber-500' },
-  aperitivo: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', accent: 'bg-emerald-500' },
-  primero: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200', accent: 'bg-indigo-500' },
-  segundo: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200', accent: 'bg-rose-600' },
-  postre: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', accent: 'bg-violet-500' },
-  todos: { bg: 'bg-stone-50', text: 'text-stone-600', border: 'border-stone-200', accent: 'bg-stone-900' }
+const CATEGORY_COLORS: Record<string, { bg: string, text: string, border: string, accent: string, hover: string }> = {
+  desayuno: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', accent: 'bg-amber-500', hover: 'group-hover:bg-amber-600' },
+  aperitivo: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', accent: 'bg-emerald-500', hover: 'group-hover:bg-emerald-600' },
+  primero: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200', accent: 'bg-indigo-500', hover: 'group-hover:bg-indigo-600' },
+  segundo: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200', accent: 'bg-rose-600', hover: 'group-hover:bg-rose-700' },
+  postre: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', accent: 'bg-violet-500', hover: 'group-hover:bg-violet-600' },
+  todos: { bg: 'bg-stone-50', text: 'text-stone-600', border: 'border-stone-200', accent: 'bg-stone-900', hover: 'group-hover:bg-stone-800' }
 };
 
 function App() {
   const [showLanding, setShowLanding] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>('todos');
+  const [activeDifficulty, setActiveDifficulty] = useState<string>('todos');
+  const [onlyQuick, setOnlyQuick] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [globalVoiceEnabled, setGlobalVoiceEnabled] = useState(false);
   
   const [favorites, setFavorites] = useState<number[]>(() => JSON.parse(localStorage.getItem('gourmet_favorites') || '[]'));
-  const [shoppingList] = useState(() => JSON.parse(localStorage.getItem('gourmet_shopping_list') || '[]'));
+  const [shoppingList, setShoppingList] = useState<string[]>(() => JSON.parse(localStorage.getItem('gourmet_shopping_list') || '[]'));
 
   const handleGlobalCommand = useCallback((cmd: string) => {
     const c = cmd.toLowerCase();
     
-    if (/mostrar|pon|enseñar|ver/.test(c)) {
-      if (c.includes('desayuno')) { setActiveCategory('desayuno'); speak("Mostrando desayunos gourmet."); }
-      else if (c.includes('aperitivo')) { setActiveCategory('aperitivo'); speak("Cargando aperitivos."); }
-      else if (c.includes('primero')) { setActiveCategory('primero'); speak("Mostrando primeros platos."); }
-      else if (c.includes('segundo')) { setActiveCategory('segundo'); speak("Aquí están los segundos."); }
-      else if (c.includes('postre')) { setActiveCategory('postre'); speak("Directo al postre."); }
-      else if (c.includes('todo')) { setActiveCategory('todos'); speak("Mostrando todo el catálogo."); }
+    if (/(mostrar|pon|enseñar|ver)/.test(c)) {
+      if (c.includes('desayuno')) setActiveCategory('desayuno');
+      else if (c.includes('aperitivo')) setActiveCategory('aperitivo');
+      else if (c.includes('primero')) setActiveCategory('primero');
+      else if (c.includes('segundo')) setActiveCategory('segundo');
+      else if (c.includes('postre')) setActiveCategory('postre');
+      else if (c.includes('todo')) setActiveCategory('todos');
     }
 
-    if (c.includes('aleatorio') || c.includes('sorpréndeme')) {
-      const random = RECIPES[Math.floor(Math.random() * RECIPES.length)];
-      setSelectedRecipe(random);
-      setIsModalOpen(true);
-      speak(`He seleccionado ${random.title} para ti.`);
-    }
+    if (c.includes('fácil') || c.includes('baja')) setActiveDifficulty('Baja');
+    else if (c.includes('difícil') || c.includes('alta')) setActiveDifficulty('Alta');
 
-    if (c.includes('limpia') || c.includes('borra')) {
+    if (c.includes('rápido') || c.includes('corto') || c.includes('30 minutos')) setOnlyQuick(true);
+
+    if (c.includes('limpia') || c.includes('borra') || c.includes('restablece')) {
       setSearchQuery('');
       setActiveCategory('todos');
-      speak("Filtros restablecidos.");
+      setActiveDifficulty('todos');
+      setOnlyQuick(false);
     }
   }, []);
 
@@ -59,27 +60,36 @@ function App() {
   });
 
   useEffect(() => {
-    if (globalVoiceEnabled && !isModalOpen) {
-      speak("Asistente activado. ¿Qué vamos a cocinar?");
-    }
+    if (globalVoiceEnabled && !isModalOpen) speak("Sistema de voz activo. ¿Qué receta buscamos?");
   }, [globalVoiceEnabled]);
 
-  useEffect(() => {
-    localStorage.setItem('gourmet_favorites', JSON.stringify(favorites));
-  }, [favorites]);
+  useEffect(() => { localStorage.setItem('gourmet_favorites', JSON.stringify(favorites)); }, [favorites]);
+  useEffect(() => { localStorage.setItem('gourmet_shopping_list', JSON.stringify(shoppingList)); }, [shoppingList]);
 
   const toggleFavorite = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
     setFavorites(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
   };
 
+  const handleAddIngredients = (ingredients: string[]) => {
+    setShoppingList(prev => {
+      const newList = [...prev];
+      ingredients.forEach(ing => { if (!newList.includes(ing)) newList.push(ing); });
+      return newList;
+    });
+  };
+
   const filteredRecipes = useMemo(() => {
     return RECIPES.filter(recipe => {
       const matchesCategory = activeCategory === 'todos' || recipe.category === activeCategory;
+      const matchesDifficulty = activeDifficulty === 'todos' || recipe.difficulty === activeDifficulty;
+      const timeVal = parseInt(recipe.time.split(' ')[0]);
+      const matchesQuick = !onlyQuick || timeVal <= 30;
       const q = searchQuery.toLowerCase();
-      return matchesCategory && (recipe.title.toLowerCase().includes(q) || recipe.ingredients.some(i => i.toLowerCase().includes(q)));
+      const matchesSearch = recipe.title.toLowerCase().includes(q) || recipe.ingredients.some(i => i.toLowerCase().includes(q));
+      return matchesCategory && matchesDifficulty && matchesQuick && matchesSearch;
     });
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, activeDifficulty, onlyQuick, searchQuery]);
 
   if (showLanding) return <LandingPage onEnter={() => setShowLanding(false)} />;
 
@@ -91,8 +101,8 @@ function App() {
 
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-3xl border-b border-stone-200/50 shadow-sm">
         <nav className="max-w-7xl mx-auto px-6 h-24 flex justify-between items-center gap-4">
-          <div className="flex items-center gap-4 shrink-0 cursor-pointer group" onClick={() => {setActiveCategory('todos'); setSearchQuery('');}}>
-             <div className="w-12 h-12 bg-stone-950 rounded-[1.25rem] flex items-center justify-center text-2xl text-white font-serif shadow-xl group-hover:rotate-6 transition-transform">G</div>
+          <div className="flex items-center gap-4 shrink-0 cursor-pointer group" onClick={() => {setActiveCategory('todos'); setSearchQuery(''); setActiveDifficulty('todos'); setOnlyQuick(false);}}>
+             <div className="w-12 h-12 bg-stone-950 rounded-2xl flex items-center justify-center text-2xl text-white font-serif shadow-xl group-hover:rotate-6 transition-transform">G</div>
              <h1 className="text-2xl font-serif font-bold tracking-tight hidden sm:block">GourmetVoice</h1>
           </div>
           
@@ -102,7 +112,7 @@ function App() {
               placeholder="¿Qué te apetece hoy?" 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className="w-full pl-14 pr-14 py-4 bg-stone-100/80 rounded-[2rem] border-2 border-transparent focus:bg-white focus:border-stone-200 transition-all outline-none text-base font-bold placeholder:text-stone-400 shadow-inner" 
+              className="w-full pl-14 pr-14 py-4 bg-stone-100/80 rounded-full border-2 border-transparent focus:bg-white focus:border-stone-200 transition-all outline-none text-base font-bold shadow-inner" 
             />
             <div className="absolute left-5 top-1/2 -translate-y-1/2 text-stone-300">🔍</div>
             <button 
@@ -114,11 +124,11 @@ function App() {
           </div>
 
           <div className="px-5 py-3 bg-stone-900 text-white rounded-2xl shadow-xl font-black text-[11px] hidden lg:block tracking-widest">
-            {shoppingList.length} ITEMS
+            {shoppingList.length} ITEMS EN LISTA
           </div>
         </nav>
 
-        <div className="max-w-7xl mx-auto px-6 py-5 flex gap-4 overflow-x-auto scrollbar-hide no-print">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex gap-4 overflow-x-auto scrollbar-hide border-b border-stone-100">
           {['todos', 'desayuno', 'aperitivo', 'primero', 'segundo', 'postre'].map(cat => {
             const catTheme = CATEGORY_COLORS[cat];
             const isActive = activeCategory === cat;
@@ -127,9 +137,7 @@ function App() {
                 key={cat} 
                 onClick={() => setActiveCategory(cat)} 
                 className={`px-8 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.25em] transition-all border-2 shadow-sm ${
-                  isActive 
-                  ? `${catTheme.accent} border-transparent text-white scale-105 shadow-md` 
-                  : `bg-white text-stone-400 border-stone-100 hover:border-stone-300`
+                  isActive ? `${catTheme.accent} border-transparent text-white scale-105 shadow-md` : `bg-white text-stone-400 border-stone-100 hover:border-stone-300`
                 }`}
               >
                 {cat}
@@ -137,62 +145,71 @@ function App() {
             );
           })}
         </div>
+
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center gap-8">
+          <div className="flex items-center gap-4">
+            <span className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Dificultad</span>
+            <div className="flex bg-stone-100 p-1 rounded-full border border-stone-200">
+              {['todos', 'Baja', 'Media', 'Alta'].map(diff => (
+                <button key={diff} onClick={() => setActiveDifficulty(diff)} className={`px-5 py-1.5 rounded-full text-[10px] font-bold transition-all ${activeDifficulty === diff ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}>
+                  {diff === 'todos' ? 'Todas' : diff === 'Baja' ? 'Fácil' : diff}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="h-4 w-px bg-stone-200 hidden md:block"></div>
+          <button onClick={() => setOnlyQuick(!onlyQuick)} className={`flex items-center gap-3 px-6 py-2 rounded-full border-2 transition-all ${onlyQuick ? 'bg-amber-500 border-transparent text-white shadow-md' : 'bg-white border-stone-100 text-stone-400 hover:border-stone-200'}`}>
+            <span className="text-xl">⏱</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Menos de 30 min</span>
+          </button>
+        </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-16">
           {filteredRecipes.map(recipe => {
             const catColor = CATEGORY_COLORS[recipe.category] || CATEGORY_COLORS.todos;
             return (
               <article 
                 key={recipe.id} 
                 onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }}
-                className={`group relative bg-white rounded-[3.5rem] border-2 ${catColor.border} overflow-hidden hover:shadow-[0_50px_100px_rgba(0,0,0,0.1)] transition-all duration-700 cursor-pointer flex flex-col h-[500px] hover:-translate-y-3`}
+                className={`group relative bg-white rounded-[4rem] border-2 ${catColor.border} overflow-hidden hover:shadow-[0_60px_120px_rgba(0,0,0,0.15)] transition-all duration-700 cursor-pointer flex flex-col h-[580px] hover:-translate-y-4`}
               >
-                <div className={`relative h-64 flex items-center justify-center p-12 overflow-hidden ${catColor.bg} transition-colors group-hover:bg-white`}>
-                  <div className={`absolute inset-0 opacity-[0.03] pointer-events-none select-none ${catColor.text}`}>
-                    <span className="text-[350px] font-black absolute -top-24 -left-20 leading-none">{recipe.title.charAt(0)}</span>
+                {/* Visual Experiment: Backdrop Blur on Hover + Color Intensity */}
+                <div className={`relative h-72 flex items-center justify-center p-14 overflow-hidden transition-all duration-700 ${catColor.bg} group-hover:bg-white`}>
+                  <div className={`absolute inset-0 opacity-[0.05] pointer-events-none group-hover:opacity-[0.15] transition-opacity ${catColor.text}`}>
+                    <span className="text-[400px] font-black absolute -top-32 -left-24 leading-none">{recipe.title.charAt(0)}</span>
                   </div>
-                  <h3 className={`relative z-10 font-serif font-bold text-4xl text-center leading-tight transition-transform duration-700 group-hover:scale-105 ${catColor.text}`}>
+                  {/* Glassmorphism layer on hover */}
+                  <div className="absolute inset-0 bg-white/0 group-hover:backdrop-blur-[8px] transition-all duration-700"></div>
+                  
+                  <h3 className={`relative z-10 font-serif font-bold text-5xl md:text-6xl text-center leading-[1.05] tracking-tight transition-transform duration-700 group-hover:scale-110 ${catColor.text}`}>
                     {recipe.title}
                   </h3>
-                  <button 
-                    onClick={(e) => toggleFavorite(e, recipe.id)} 
-                    className={`absolute bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center backdrop-blur-md transition-all border shadow-lg ${
-                      favorites.includes(recipe.id) ? `${catColor.accent} text-white border-transparent` : 'bg-white/80 text-stone-300 border-white hover:text-stone-600'
-                    }`}
-                  >
+                  
+                  <button onClick={(e) => toggleFavorite(e, recipe.id)} className={`absolute bottom-8 right-8 w-16 h-16 rounded-full flex items-center justify-center backdrop-blur-md transition-all border shadow-lg ${favorites.includes(recipe.id) ? `${catColor.accent} text-white border-transparent` : 'bg-white/80 text-stone-300 border-white hover:text-stone-600'}`}>
                     {favorites.includes(recipe.id) ? '★' : '☆'}
                   </button>
                 </div>
 
-                <div className="p-12 flex-1 flex flex-col">
-                  <div className="flex justify-between items-center mb-8">
-                    <span className={`px-4 py-1 rounded-lg text-[11px] font-black uppercase tracking-widest ${catColor.bg} ${catColor.text}`}>
+                <div className="p-14 flex-1 flex flex-col">
+                  <div className="flex justify-between items-center mb-10">
+                    <span className={`px-5 py-1.5 rounded-xl text-[12px] font-black uppercase tracking-widest ${catColor.bg} ${catColor.text} group-hover:scale-110 transition-transform duration-500`}>
                       {recipe.category}
                     </span>
-                    <span className="text-[11px] font-black uppercase tracking-widest text-stone-400">
-                      ⏱ {recipe.time}
-                    </span>
+                    <span className="text-[12px] font-black uppercase tracking-widest text-stone-400">⏱ {recipe.time}</span>
                   </div>
-                  <p className="text-stone-500 text-sm line-clamp-3 leading-relaxed mb-8 italic font-serif">
+                  <p className="text-stone-500 text-lg line-clamp-3 leading-relaxed mb-10 italic font-serif opacity-80 group-hover:opacity-100 transition-opacity">
                     {recipe.description}
                   </p>
-                  <div className="mt-auto flex justify-between items-center pt-8 border-t border-stone-50">
-                     <div className="flex gap-2">
+                  <div className="mt-auto flex justify-between items-center pt-10 border-t border-stone-50">
+                     <div className="flex gap-3">
                         {[...Array(3)].map((_, i) => (
-                          <div 
-                            key={i} 
-                            className={`w-2 h-2 rounded-full transition-colors ${
-                              i < (recipe.difficulty === 'Baja' ? 1 : recipe.difficulty === 'Media' ? 2 : 3) 
-                              ? catColor.accent 
-                              : 'bg-stone-100'
-                            }`}
-                          ></div>
+                          <div key={i} className={`w-3 h-3 rounded-full transition-all duration-500 ${i < (recipe.difficulty === 'Baja' ? 1 : recipe.difficulty === 'Media' ? 2 : 3) ? catColor.accent : 'bg-stone-100'}`}></div>
                         ))}
                      </div>
-                     <span className={`text-[11px] font-black tracking-[0.3em] uppercase transition-all flex items-center gap-2 group-hover:gap-4 ${catColor.text}`}>
-                       PREPARAR <span className="text-xl">→</span>
+                     <span className={`text-[12px] font-black tracking-[0.4em] uppercase transition-all flex items-center gap-3 group-hover:gap-6 ${catColor.text}`}>
+                       PREPARAR <span className="text-2xl transition-transform group-hover:translate-x-2">→</span>
                      </span>
                   </div>
                 </div>
@@ -207,7 +224,7 @@ function App() {
           recipe={selectedRecipe} 
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)} 
-          onAddIngredients={() => {}}
+          onAddIngredients={handleAddIngredients}
           onUpdateTime={() => {}} 
         />
       )}
