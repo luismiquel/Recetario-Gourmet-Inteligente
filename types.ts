@@ -2,7 +2,7 @@
 export interface Recipe {
   id: number;
   title: string;
-  category: 'aperitivo' | 'primero' | 'segundo' | 'postre' | 'otros';
+  category: 'aperitivo' | 'primero' | 'segundo' | 'postre' | 'desayuno' | 'otros';
   image: string;
   description: string;
   ingredients: string[];

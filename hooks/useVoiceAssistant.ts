@@ -11,35 +11,59 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
   const [status, setStatus] = useState<VoiceStatus>('idle');
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis);
-  const isSpeaking = useRef(false);
-  const isListening = useRef(false);
-  const restartTimer = useRef<number | null>(null);
+  const isSpeakingRef = useRef(false);
+  const isListeningRef = useRef(false);
+  const restartTimerRef = useRef<number | null>(null);
 
-  const safeStop = useCallback(() => {
-    if (recognitionRef.current && isListening.current) {
+  const playFeedback = (type: 'success' | 'start') => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(type === 'success' ? 880 : 440, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(type === 'success' ? 440 : 880, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.1);
+    } catch (e) {
+      // Audio context might be blocked or not supported
+    }
+  };
+
+  const stopRecognition = useCallback(() => {
+    if (recognitionRef.current) {
       try {
-        recognitionRef.current.abort();
-        isListening.current = false;
+        recognitionRef.current.abort(); // abort is more immediate than stop()
       } catch (e) {}
+      isListeningRef.current = false;
     }
   }, []);
 
-  const safeStart = useCallback(() => {
-    if (!recognitionRef.current || isSpeaking.current || isListening.current || !enabled) return;
+  const startRecognition = useCallback(() => {
+    // No iniciar si ya se está escuchando, hablando o si está deshabilitado
+    if (!recognitionRef.current || isSpeakingRef.current || isListeningRef.current || !enabled) return;
+
     try {
       recognitionRef.current.start();
     } catch (e) {
-      // Si falla al arrancar, intentamos limpiar y reiniciar
-      safeStop();
+      // Si ya estaba iniciado, ignoramos el error
+      if (e instanceof Error && e.name === 'InvalidStateError') {
+        isListeningRef.current = true;
+      } else {
+        isListeningRef.current = false;
+      }
     }
-  }, [enabled, safeStop]);
+  }, [enabled]);
 
   useEffect(() => {
     const win = window as unknown as IWindow;
     const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      console.warn("Reconocimiento de voz no soportado en este navegador.");
       setStatus('error');
       return;
     }
@@ -52,32 +76,33 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
 
       recognition.onstart = () => {
         setStatus('listening');
-        isListening.current = true;
+        isListeningRef.current = true;
       };
 
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript.toLowerCase();
-        console.log("Comando recibido:", transcript);
+        console.log("Chef Voice Input:", transcript);
+        playFeedback('success');
         setStatus('processing');
         onCommand(transcript);
       };
 
       recognition.onerror = (event: any) => {
-        isListening.current = false;
+        isListeningRef.current = false;
         if (event.error === 'not-allowed') {
           setStatus('error');
-        } else if (event.error === 'no-speech') {
-          setStatus('idle');
+        } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
+          console.warn("Speech recognition error:", event.error);
         }
       };
 
       recognition.onend = () => {
-        isListening.current = false;
-        // Reiniciar automáticamente si sigue habilitado
-        if (enabled && !isSpeaking.current) {
-          if (restartTimer.current) window.clearTimeout(restartTimer.current);
-          restartTimer.current = window.setTimeout(safeStart, 400);
-        } else {
+        isListeningRef.current = false;
+        // Reiniciar si sigue habilitado y no estamos hablando
+        if (enabled && !isSpeakingRef.current) {
+          if (restartTimerRef.current) window.clearTimeout(restartTimerRef.current);
+          restartTimerRef.current = window.setTimeout(startRecognition, 300);
+        } else if (!enabled) {
           setStatus('idle');
         }
       };
@@ -86,44 +111,48 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     }
 
     if (enabled) {
-      safeStart();
+      startRecognition();
     } else {
-      safeStop();
+      stopRecognition();
       setStatus('idle');
     }
 
     return () => {
-      if (restartTimer.current) window.clearTimeout(restartTimer.current);
-      safeStop();
+      if (restartTimerRef.current) window.clearTimeout(restartTimerRef.current);
+      stopRecognition();
     };
-  }, [enabled, onCommand, safeStart, safeStop]);
+  }, [enabled, onCommand, startRecognition, stopRecognition]);
 
   const speak = useCallback((text: string) => {
     if (!synthRef.current) return;
 
-    safeStop();
-    isSpeaking.current = true;
+    // Detener reconocimiento antes de hablar para evitar ecos
+    stopRecognition();
+    isSpeakingRef.current = true;
     synthRef.current.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-ES';
-    utterance.rate = 1.0;
     utterance.pitch = 1.0;
+    utterance.rate = 1.0;
 
     utterance.onstart = () => setStatus('speaking');
     
-    utterance.onend = () => {
-      isSpeaking.current = false;
-      // Esperamos 1 segundo para evitar eco antes de volver a escuchar
+    const handleEnd = () => {
+      isSpeakingRef.current = false;
       if (enabled) {
-        setTimeout(safeStart, 1000);
+        // Pequeño delay después de hablar antes de volver a escuchar
+        setTimeout(startRecognition, 500);
       } else {
         setStatus('idle');
       }
     };
 
+    utterance.onend = handleEnd;
+    utterance.onerror = handleEnd;
+
     synthRef.current.speak(utterance);
-  }, [enabled, safeStart, safeStop]);
+  }, [enabled, startRecognition, stopRecognition]);
 
   return { status, speak };
 };

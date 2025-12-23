@@ -7,6 +7,15 @@ import { LandingPage } from './components/LandingPage';
 import { useVoiceAssistant } from './hooks/useVoiceAssistant';
 import { VoiceFeedback } from './components/VoiceFeedback';
 
+const CATEGORY_COLORS: Record<string, { bg: string, text: string, border: string, accent: string }> = {
+  desayuno: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', accent: 'bg-amber-500' },
+  aperitivo: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', accent: 'bg-emerald-500' },
+  primero: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200', accent: 'bg-indigo-500' },
+  segundo: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200', accent: 'bg-rose-600' },
+  postre: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', accent: 'bg-violet-500' },
+  todos: { bg: 'bg-stone-50', text: 'text-stone-600', border: 'border-stone-200', accent: 'bg-stone-900' }
+};
+
 function App() {
   const [showLanding, setShowLanding] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>('todos');
@@ -22,7 +31,8 @@ function App() {
     const c = cmd.toLowerCase();
     
     if (/mostrar|pon|enseñar|ver/.test(c)) {
-      if (c.includes('aperitivo')) { setActiveCategory('aperitivo'); speak("Cargando aperitivos."); }
+      if (c.includes('desayuno')) { setActiveCategory('desayuno'); speak("Mostrando desayunos gourmet."); }
+      else if (c.includes('aperitivo')) { setActiveCategory('aperitivo'); speak("Cargando aperitivos."); }
       else if (c.includes('primero')) { setActiveCategory('primero'); speak("Mostrando primeros platos."); }
       else if (c.includes('segundo')) { setActiveCategory('segundo'); speak("Aquí están los segundos."); }
       else if (c.includes('postre')) { setActiveCategory('postre'); speak("Directo al postre."); }
@@ -73,90 +83,122 @@ function App() {
 
   if (showLanding) return <LandingPage onEnter={() => setShowLanding(false)} />;
 
+  const theme = CATEGORY_COLORS[activeCategory] || CATEGORY_COLORS.todos;
+
   return (
-    <div className="min-h-screen bg-stone-50 pb-24 selection:bg-amber-100">
+    <div className={`min-h-screen ${theme.bg} transition-colors duration-1000 pb-24 selection:bg-amber-100`}>
       <VoiceFeedback status={isModalOpen ? 'idle' : status} />
 
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-2xl border-b border-stone-100">
-        <nav className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center gap-4">
-          <div className="flex items-center gap-3 shrink-0 cursor-pointer" onClick={() => {setActiveCategory('todos'); setSearchQuery('');}}>
-             <div className="w-10 h-10 bg-stone-950 rounded-2xl flex items-center justify-center text-xl text-white font-serif shadow-xl">G</div>
-             <h1 className="text-xl font-serif font-bold tracking-tight hidden sm:block">GourmetVoice</h1>
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-3xl border-b border-stone-200/50 shadow-sm">
+        <nav className="max-w-7xl mx-auto px-6 h-24 flex justify-between items-center gap-4">
+          <div className="flex items-center gap-4 shrink-0 cursor-pointer group" onClick={() => {setActiveCategory('todos'); setSearchQuery('');}}>
+             <div className="w-12 h-12 bg-stone-950 rounded-[1.25rem] flex items-center justify-center text-2xl text-white font-serif shadow-xl group-hover:rotate-6 transition-transform">G</div>
+             <h1 className="text-2xl font-serif font-bold tracking-tight hidden sm:block">GourmetVoice</h1>
           </div>
           
-          <div className="flex-1 max-w-xl relative">
+          <div className="flex-1 max-w-2xl relative group">
             <input 
               type="text" 
-              placeholder="Busca un plato..." 
+              placeholder="¿Qué te apetece hoy?" 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className="w-full pl-12 pr-12 py-3.5 bg-stone-100 rounded-3xl focus:bg-white focus:ring-2 focus:ring-stone-200 transition-all outline-none text-sm font-bold placeholder:text-stone-400" 
+              className="w-full pl-14 pr-14 py-4 bg-stone-100/80 rounded-[2rem] border-2 border-transparent focus:bg-white focus:border-stone-200 transition-all outline-none text-base font-bold placeholder:text-stone-400 shadow-inner" 
             />
+            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-stone-300">🔍</div>
             <button 
               onClick={() => setGlobalVoiceEnabled(!globalVoiceEnabled)} 
-              className={`absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-2xl transition-all ${globalVoiceEnabled ? 'bg-amber-600 text-white animate-pulse shadow-lg' : 'bg-stone-200 text-stone-400 hover:text-stone-600'}`}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-2xl transition-all ${globalVoiceEnabled ? 'bg-amber-600 text-white animate-pulse shadow-lg scale-110' : 'bg-stone-200 text-stone-400 hover:text-stone-600'}`}
             >
               🎤
             </button>
           </div>
 
-          <div className="p-3 bg-stone-900 text-white rounded-2xl shadow-lg font-black text-[10px] hidden sm:block">
-            {shoppingList.length} LISTA
+          <div className="px-5 py-3 bg-stone-900 text-white rounded-2xl shadow-xl font-black text-[11px] hidden lg:block tracking-widest">
+            {shoppingList.length} ITEMS
           </div>
         </nav>
 
-        <div className="max-w-7xl mx-auto px-6 py-4 flex gap-3 overflow-x-auto scrollbar-hide">
-          {['todos', 'aperitivo', 'primero', 'segundo', 'postre'].map(cat => (
-            <button 
-              key={cat} 
-              onClick={() => setActiveCategory(cat)} 
-              className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all border ${activeCategory === cat ? 'bg-stone-900 border-stone-900 text-white' : 'bg-white text-stone-400 border-stone-200'}`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="max-w-7xl mx-auto px-6 py-5 flex gap-4 overflow-x-auto scrollbar-hide no-print">
+          {['todos', 'desayuno', 'aperitivo', 'primero', 'segundo', 'postre'].map(cat => {
+            const catTheme = CATEGORY_COLORS[cat];
+            const isActive = activeCategory === cat;
+            return (
+              <button 
+                key={cat} 
+                onClick={() => setActiveCategory(cat)} 
+                className={`px-8 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.25em] transition-all border-2 shadow-sm ${
+                  isActive 
+                  ? `${catTheme.accent} border-transparent text-white scale-105 shadow-md` 
+                  : `bg-white text-stone-400 border-stone-100 hover:border-stone-300`
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-          {filteredRecipes.map(recipe => (
-            <article 
-              key={recipe.id} 
-              onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }}
-              className="group relative bg-white rounded-[3rem] border border-stone-100 overflow-hidden hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] transition-all duration-500 cursor-pointer flex flex-col h-[420px]"
-            >
-              <div className="relative h-56 flex items-center justify-center p-10 overflow-hidden bg-stone-50 transition-colors group-hover:bg-amber-50">
-                <div className="absolute inset-0 opacity-[0.05] pointer-events-none select-none">
-                  <span className="text-[300px] font-black absolute -top-16 -left-16 leading-none">{recipe.title.charAt(0)}</span>
+      <main className="max-w-7xl mx-auto px-6 py-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+          {filteredRecipes.map(recipe => {
+            const catColor = CATEGORY_COLORS[recipe.category] || CATEGORY_COLORS.todos;
+            return (
+              <article 
+                key={recipe.id} 
+                onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }}
+                className={`group relative bg-white rounded-[3.5rem] border-2 ${catColor.border} overflow-hidden hover:shadow-[0_50px_100px_rgba(0,0,0,0.1)] transition-all duration-700 cursor-pointer flex flex-col h-[500px] hover:-translate-y-3`}
+              >
+                <div className={`relative h-64 flex items-center justify-center p-12 overflow-hidden ${catColor.bg} transition-colors group-hover:bg-white`}>
+                  <div className={`absolute inset-0 opacity-[0.03] pointer-events-none select-none ${catColor.text}`}>
+                    <span className="text-[350px] font-black absolute -top-24 -left-20 leading-none">{recipe.title.charAt(0)}</span>
+                  </div>
+                  <h3 className={`relative z-10 font-serif font-bold text-4xl text-center leading-tight transition-transform duration-700 group-hover:scale-105 ${catColor.text}`}>
+                    {recipe.title}
+                  </h3>
+                  <button 
+                    onClick={(e) => toggleFavorite(e, recipe.id)} 
+                    className={`absolute bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center backdrop-blur-md transition-all border shadow-lg ${
+                      favorites.includes(recipe.id) ? `${catColor.accent} text-white border-transparent` : 'bg-white/80 text-stone-300 border-white hover:text-stone-600'
+                    }`}
+                  >
+                    {favorites.includes(recipe.id) ? '★' : '☆'}
+                  </button>
                 </div>
-                <h3 className="relative z-10 font-serif font-bold text-3xl text-center leading-tight group-hover:scale-110 transition-transform duration-700">
-                  {recipe.title}
-                </h3>
-                <button onClick={(e) => toggleFavorite(e, recipe.id)} className={`absolute bottom-6 right-6 w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${favorites.includes(recipe.id) ? 'bg-amber-600 text-white' : 'bg-white/50 text-stone-400 hover:bg-white'}`}>
-                  {favorites.includes(recipe.id) ? '★' : '☆'}
-                </button>
-              </div>
 
-              <div className="p-10 flex-1 flex flex-col">
-                <div className="flex justify-between items-center mb-6">
-                  <span className="text-[10px] font-black uppercase tracking-widest opacity-30">{recipe.category}</span>
-                  <span className="text-[10px] font-black uppercase tracking-widest opacity-30">⏱ {recipe.time}</span>
+                <div className="p-12 flex-1 flex flex-col">
+                  <div className="flex justify-between items-center mb-8">
+                    <span className={`px-4 py-1 rounded-lg text-[11px] font-black uppercase tracking-widest ${catColor.bg} ${catColor.text}`}>
+                      {recipe.category}
+                    </span>
+                    <span className="text-[11px] font-black uppercase tracking-widest text-stone-400">
+                      ⏱ {recipe.time}
+                    </span>
+                  </div>
+                  <p className="text-stone-500 text-sm line-clamp-3 leading-relaxed mb-8 italic font-serif">
+                    {recipe.description}
+                  </p>
+                  <div className="mt-auto flex justify-between items-center pt-8 border-t border-stone-50">
+                     <div className="flex gap-2">
+                        {[...Array(3)].map((_, i) => (
+                          <div 
+                            key={i} 
+                            className={`w-2 h-2 rounded-full transition-colors ${
+                              i < (recipe.difficulty === 'Baja' ? 1 : recipe.difficulty === 'Media' ? 2 : 3) 
+                              ? catColor.accent 
+                              : 'bg-stone-100'
+                            }`}
+                          ></div>
+                        ))}
+                     </div>
+                     <span className={`text-[11px] font-black tracking-[0.3em] uppercase transition-all flex items-center gap-2 group-hover:gap-4 ${catColor.text}`}>
+                       PREPARAR <span className="text-xl">→</span>
+                     </span>
+                  </div>
                 </div>
-                <p className="text-stone-400 text-xs line-clamp-3 leading-relaxed mb-8 italic font-serif">
-                  {recipe.description}
-                </p>
-                <div className="mt-auto flex justify-between items-center pt-6 border-t border-stone-50">
-                   <div className="flex gap-1.5 opacity-20">
-                      {[...Array(recipe.difficulty === 'Baja' ? 1 : recipe.difficulty === 'Media' ? 2 : 3)].map((_, i) => (
-                        <div key={i} className="w-1.5 h-1.5 rounded-full bg-stone-900"></div>
-                      ))}
-                   </div>
-                   <span className="text-[10px] font-black tracking-widest uppercase text-stone-950 group-hover:translate-x-2 transition-transform underline underline-offset-4 decoration-stone-200">ABRIR →</span>
-                </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       </main>
 
