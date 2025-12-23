@@ -26,6 +26,7 @@
         background: #0c0a09;
         color: white;
         z-index: 9999;
+        transition: opacity 0.5s ease-out;
       }
 
       #error-display {
@@ -60,8 +61,8 @@
 {
   "imports": {
     "react": "https://esm.sh/react@19.0.0",
-    "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "react-dom": "https://esm.sh/react-dom@19.0.0?external=react",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client?external=react",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/"
   }
@@ -69,7 +70,6 @@
 </script>
 
     <script>
-      // Capturador de errores crítico para depurar fallos en producción
       window.onerror = function(message, source, lineno, colno, error) {
         console.error("GourmetVoice Error:", message, "at", source, ":", lineno);
         const display = document.getElementById('error-display');
@@ -93,14 +93,13 @@
 
     <script>
       window.addEventListener('load', () => {
-        // Un breve retraso para asegurar que React ha montado el DOM
         setTimeout(() => {
           const loader = document.getElementById('initial-loader');
           if (loader) {
             loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
           }
-        }, 1000);
+        }, 800);
       });
     </script>
   </body>
