@@ -19,10 +19,35 @@
         font-family: 'Lato', sans-serif;
         -webkit-tap-highlight-color: transparent;
         scroll-behavior: smooth;
+        background-color: #f5f5f4; /* stone-100 */
       }
       h1, h2, h3, .font-serif {
         font-family: 'Playfair Display', serif;
       }
+
+      /* Loader inicial para evitar pantalla blanca */
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #0c0a09; /* stone-950 */
+        color: white;
+        z-index: 9999;
+        transition: opacity 0.5s ease-out;
+      }
+      .loader-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255,255,255,0.1);
+        border-top-color: #d97706; /* amber-600 */
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
 
       .scrollbar-hide::-webkit-scrollbar { display: none; }
       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -52,8 +77,8 @@
 {
   "imports": {
     "react": "https://esm.sh/react@19.0.0",
-    "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "react-dom": "https://esm.sh/react-dom@19.0.0?external=react",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client?external=react",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/"
   }
@@ -61,6 +86,22 @@
 </script>
   </head>
   <body class="bg-stone-50 text-stone-800 antialiased overflow-x-hidden">
+    <div id="initial-loader">
+      <div class="loader-spinner"></div>
+      <div style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: bold;">GourmetVoice</div>
+      <div style="font-size: 0.7rem; letter-spacing: 0.3em; margin-top: 10px; opacity: 0.5; text-transform: uppercase;">Encendiendo fogones...</div>
+    </div>
     <div id="root"></div>
+    <script>
+      // Eliminar el loader cuando React se monte
+      window.addEventListener('load', () => {
+        // Un pequeño delay para asegurar que React ha empezado el renderizado
+        setTimeout(() => {
+          const loader = document.getElementById('initial-loader');
+          if (loader) loader.style.opacity = '0';
+          setTimeout(() => loader?.remove(), 500);
+        }, 500);
+      });
+    </script>
   </body>
 </html>
