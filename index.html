@@ -25,7 +25,7 @@
         font-family: 'Playfair Display', serif;
       }
 
-      /* Loader inicial para evitar pantalla blanca */
+      /* Loader inicial */
       #initial-loader {
         position: fixed;
         inset: 0;
@@ -51,27 +51,6 @@
 
       .scrollbar-hide::-webkit-scrollbar { display: none; }
       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-
-      @keyframes voice-wave {
-        0%, 100% { height: 8px; opacity: 0.3; }
-        50% { height: 28px; opacity: 1; }
-      }
-      .wave-bar {
-        animation: voice-wave 1s ease-in-out infinite;
-        width: 4px;
-        border-radius: 2px;
-        background-color: currentColor;
-      }
-      .wave-delay-1 { animation-delay: 0.1s; }
-      .wave-delay-2 { animation-delay: 0.2s; }
-
-      .glass-card {
-        backdrop-filter: blur(0px);
-        transition: backdrop-filter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-      }
-      .group:hover .glass-card {
-        backdrop-filter: blur(12px);
-      }
     </style>
     <script type="importmap">
 {
@@ -89,18 +68,17 @@
     <div id="initial-loader">
       <div class="loader-spinner"></div>
       <div style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: bold;">GourmetVoice</div>
-      <div style="font-size: 0.7rem; letter-spacing: 0.3em; margin-top: 10px; opacity: 0.5; text-transform: uppercase;">Encendiendo fogones...</div>
+      <div style="font-size: 0.7rem; letter-spacing: 0.3em; margin-top: 10px; opacity: 0.5; text-transform: uppercase;">Preparando tu cocina...</div>
     </div>
     <div id="root"></div>
     <script>
-      // Eliminar el loader cuando React se monte
+      // Ocultar loader una vez React tome el control
       window.addEventListener('load', () => {
-        // Un pequeño delay para asegurar que React ha empezado el renderizado
         setTimeout(() => {
           const loader = document.getElementById('initial-loader');
           if (loader) loader.style.opacity = '0';
           setTimeout(() => loader?.remove(), 500);
-        }, 500);
+        }, 800);
       });
     </script>
   </body>
