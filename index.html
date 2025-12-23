@@ -68,17 +68,17 @@
     <div id="initial-loader">
       <div class="loader-spinner"></div>
       <div style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: bold;">GourmetVoice</div>
-      <div style="font-size: 0.7rem; letter-spacing: 0.3em; margin-top: 10px; opacity: 0.5; text-transform: uppercase;">Preparando tu cocina...</div>
+      <div style="font-size: 0.7rem; letter-spacing: 0.3em; margin-top: 10px; opacity: 0.5; text-transform: uppercase;">Calentando motores...</div>
     </div>
     <div id="root"></div>
     <script>
-      // Ocultar loader una vez React tome el control
+      // Ocultar loader una vez la ventana cargue los recursos
       window.addEventListener('load', () => {
-        setTimeout(() => {
-          const loader = document.getElementById('initial-loader');
-          if (loader) loader.style.opacity = '0';
-          setTimeout(() => loader?.remove(), 500);
-        }, 800);
+        const loader = document.getElementById('initial-loader');
+        if (loader) {
+          loader.style.opacity = '0';
+          setTimeout(() => loader.remove(), 600);
+        }
       });
     </script>
   </body>
