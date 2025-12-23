@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Recipe, VoiceStatus } from '../types';
-import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
+import { Recipe, VoiceStatus } from '../types.ts';
+import { useVoiceAssistant } from '../hooks/useVoiceAssistant.ts';
 
 interface RecipeModalProps {
   recipe: Recipe | null;
@@ -56,7 +56,6 @@ const VoiceStatusOrb: React.FC<{ status: VoiceStatus; accentColor: string }> = (
 export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClose, onAddIngredients }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [isKitchenMode, setIsKitchenMode] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('full');
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const [addedToList, setAddedToList] = useState(false);
@@ -73,17 +72,13 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
 
   const nextStep = useCallback(() => {
     if (!recipe) return;
-    setActiveStep(prev => {
-      const next = Math.min(prev + 1, recipe.steps.length - 1);
-      return next;
-    });
+    setActiveStep(prev => Math.min(prev + 1, recipe.steps.length - 1));
   }, [recipe]);
 
   const prevStep = useCallback(() => {
     setActiveStep(prev => Math.max(prev - 1, 0));
   }, []);
 
-  // CRÍTICO: Memoizamos handleCommand para no reiniciar el asistente de voz constantemente
   const handleCommand = useCallback((cmd: string) => {
     if (!recipe) return;
     const c = cmd.toLowerCase();
@@ -105,12 +100,11 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
     onCommand: handleCommand
   });
 
-  // Al abrir el modal o cambiar de paso, narramos si es necesario
   useEffect(() => {
     if (isOpen && recipe) {
       if (activeStep === 0 && status === 'idle') {
         speak(`${recipe.title} lista. ¿Repasamos ingredientes?`);
-      } else {
+      } else if (activeStep > 0) {
         speak(`Paso ${activeStep + 1}: ${recipe.steps[activeStep]}`);
       }
     }
@@ -168,7 +162,6 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
 
         <div className="flex-1 overflow-y-auto p-10 md:p-16 lg:p-20 scrollbar-hide bg-white">
           <div className={`transition-all duration-700 ease-in-out ${viewMode === 'ingredients' ? 'max-w-4xl mx-auto' : 'grid lg:grid-cols-12 gap-16 lg:gap-24'}`}>
-            
             <aside className={`${viewMode === 'ingredients' ? 'lg:col-span-12' : 'lg:col-span-5'} space-y-10`}>
               <div className="border-b-2 border-stone-100 pb-6 mb-8 flex justify-between items-center">
                 <h3 className="text-2xl font-serif font-bold text-stone-900">Mise en Place</h3>
@@ -179,7 +172,6 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
                   </button>
                 </div>
               </div>
-              
               <ul className={`grid gap-4 ${viewMode === 'ingredients' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
                 {recipe.ingredients.map((ing, i) => (
                   <li key={i} onClick={() => { const n = new Set(checkedIngredients); n.has(i) ? n.delete(i) : n.add(i); setCheckedIngredients(n); }} className="flex items-center gap-4 cursor-pointer group p-3 rounded-2xl hover:bg-stone-50 transition-all">
@@ -193,7 +185,6 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
                 ))}
               </ul>
             </aside>
-
             {viewMode === 'full' && (
               <main className="lg:col-span-7 space-y-8">
                 <div className="flex justify-between items-center border-b-2 border-stone-100 pb-6 mb-8">
@@ -220,13 +211,11 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
             )}
           </div>
         </div>
-
         <footer className="shrink-0 p-8 bg-white border-t border-stone-100 flex gap-4 items-center justify-between">
           <button onClick={() => setVoiceEnabled(!voiceEnabled)} className={`flex-1 py-6 rounded-full font-black text-[10px] tracking-[0.3em] transition-all flex items-center justify-center gap-4 shadow-xl active:scale-95 ${voiceEnabled ? `${theme.accent} text-white` : 'bg-stone-900 text-white'}`}>
             <span className="text-2xl">{voiceEnabled ? '🎤' : '🎙️'}</span>
             {voiceEnabled ? 'ASISTENTE ACTIVO' : 'ACTIVAR VOZ'}
           </button>
-          <button onClick={() => setIsKitchenMode(true)} className="px-10 py-6 bg-stone-100 rounded-full font-black text-[10px] uppercase tracking-[0.3em] hover:bg-stone-200 transition-all active:scale-95">ENFOCAR 🍳</button>
         </footer>
       </div>
     </div>

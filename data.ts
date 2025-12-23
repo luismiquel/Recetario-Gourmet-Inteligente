@@ -1,5 +1,5 @@
 
-import { Recipe } from './types';
+import { Recipe } from './types.ts';
 
 const TECNICAS = {
   arroz: {
@@ -125,21 +125,18 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
   const todas: Recipe[] = [];
   const cats: Recipe['category'][] = ['desayuno', 'aperitivo', 'primero', 'segundo', 'postre'];
   
-  // Generamos exactamente 200 recetas por cada categoría para un total de 1,000
   cats.forEach((cat, cIdx) => {
     const pool = TITULOS_POOL[cat];
     const totalPorCat = 200;
 
     for (let i = 0; i < totalPorCat; i++) {
       const baseTitle = pool[i % pool.length];
-      // Para evitar nombres idénticos, añadimos una variante o detalle si el pool se repite
       const suffix = i >= pool.length ? `(Edición ${Math.floor(i / pool.length) + 1})` : '';
       const title = `${baseTitle} ${suffix}`.trim();
       
       let tecnica = TECNICAS.ensalada;
       const tLow = title.toLowerCase();
       
-      // Lógica de mapeo de técnica según nombre y categoría
       if (cat === 'desayuno') {
         if (tLow.includes('huevo') || tLow.includes('omelette') || tLow.includes('revuelto') || tLow.includes('shakshuka') || tLow.includes('madame')) {
           tecnica = TECNICAS.huevos;
@@ -148,7 +145,7 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
         } else if (tLow.includes('tortitas') || tLow.includes('pancakes') || tLow.includes('gofres') || tLow.includes('crepes') || tLow.includes('croissant') || tLow.includes('rollitos') || tLow.includes('tarta')) {
           tecnica = TECNICAS.reposteria;
         } else {
-          tecnica = TECNICAS.huevos; // Por defecto para desayunos, la técnica de huevo/tostada es común
+          tecnica = TECNICAS.huevos;
         }
       } else if (cat === 'postre') {
         tecnica = TECNICAS.reposteria;
@@ -165,7 +162,7 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
       }
 
       todas.push({
-        id: (cIdx + 1) * 1000 + i, // IDs únicos y estructurados
+        id: (cIdx + 1) * 1000 + i,
         title,
         category: cat,
         image: `https://picsum.photos/600/400?random=${(cIdx + 1) * 1000 + i}`,

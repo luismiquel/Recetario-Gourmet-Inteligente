@@ -1,11 +1,11 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { RECIPES } from './data';
-import { Recipe } from './types';
-import { RecipeModal } from './components/RecipeModal';
-import { LandingPage } from './components/LandingPage';
-import { useVoiceAssistant } from './hooks/useVoiceAssistant';
-import { VoiceFeedback } from './components/VoiceFeedback';
+import { RECIPES } from './data.ts';
+import { Recipe } from './types.ts';
+import { RecipeModal } from './components/RecipeModal.tsx';
+import { LandingPage } from './components/LandingPage.tsx';
+import { useVoiceAssistant } from './hooks/useVoiceAssistant.ts';
+import { VoiceFeedback } from './components/VoiceFeedback.tsx';
 
 const CATEGORY_COLORS: Record<string, { bg: string, text: string, border: string, accent: string, shadow: string }> = {
   desayuno: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', accent: 'bg-amber-600', shadow: 'shadow-amber-900/10' },
@@ -27,8 +27,16 @@ function App() {
   const [globalVoiceEnabled, setGlobalVoiceEnabled] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   
-  const [favorites, setFavorites] = useState<number[]>(() => JSON.parse(localStorage.getItem('gourmet_favorites') || '[]'));
-  const [shoppingList, setShoppingList] = useState<string[]>(() => JSON.parse(localStorage.getItem('gourmet_shopping_list') || '[]'));
+  const [favorites, setFavorites] = useState<number[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('gourmet_favorites') || '[]');
+    } catch { return []; }
+  });
+  const [shoppingList, setShoppingList] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('gourmet_shopping_list') || '[]');
+    } catch { return []; }
+  });
 
   const handleGlobalCommand = useCallback((cmd: string) => {
     const c = cmd.toLowerCase();
@@ -64,9 +72,9 @@ function App() {
 
   useEffect(() => {
     if (globalVoiceEnabled && !isModalOpen) {
-      speak("GourmetVoice listo. Puedes decir: Muestra postres, o Ayuda.");
+      speak("GourmetVoice listo. Di: Muestra postres, o Ayuda.");
     }
-  }, [globalVoiceEnabled, isModalOpen]);
+  }, [globalVoiceEnabled, isModalOpen, speak]);
 
   useEffect(() => { localStorage.setItem('gourmet_favorites', JSON.stringify(favorites)); }, [favorites]);
   useEffect(() => { localStorage.setItem('gourmet_shopping_list', JSON.stringify(shoppingList)); }, [shoppingList]);
@@ -209,7 +217,6 @@ function App() {
         </div>
       </main>
 
-      {/* Modal de Ayuda de Voz */}
       {showHelp && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-stone-950/80 backdrop-blur-xl" onClick={() => setShowHelp(false)}></div>
