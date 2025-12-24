@@ -1,4 +1,5 @@
 
+// Import React to provide the React namespace for types like React.MouseEvent
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { RECIPES } from './data.ts';
 import { Recipe } from './types.ts';
@@ -7,13 +8,13 @@ import { LandingPage } from './components/LandingPage.tsx';
 import { useVoiceAssistant } from './hooks/useVoiceAssistant.ts';
 import { VoiceFeedback } from './components/VoiceFeedback.tsx';
 
-const CATEGORY_COLORS: Record<string, { bg: string, text: string, border: string, accent: string, shadow: string }> = {
-  desayuno: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', accent: 'bg-amber-600', shadow: 'shadow-amber-900/10' },
-  aperitivo: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', accent: 'bg-emerald-600', shadow: 'shadow-emerald-900/10' },
-  primero: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200', accent: 'bg-indigo-600', shadow: 'shadow-indigo-900/10' },
-  segundo: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200', accent: 'bg-rose-600', shadow: 'shadow-rose-900/10' },
-  postre: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', accent: 'bg-violet-600', shadow: 'shadow-violet-900/10' },
-  todos: { bg: 'bg-stone-50', text: 'text-stone-700', border: 'border-stone-200', accent: 'bg-stone-900', shadow: 'shadow-stone-900/10' }
+const CATEGORY_COLORS: Record<string, { bg: string, text: string, border: string, accent: string, shadow: string, light: string, ring: string }> = {
+  desayuno: { bg: 'bg-amber-50', text: 'text-amber-900', border: 'border-amber-100', accent: 'bg-amber-600', shadow: 'shadow-amber-900/10', light: 'bg-amber-100/40', ring: 'group-hover:ring-amber-200' },
+  aperitivo: { bg: 'bg-emerald-50', text: 'text-emerald-900', border: 'border-emerald-100', accent: 'bg-emerald-600', shadow: 'shadow-emerald-900/10', light: 'bg-emerald-100/40', ring: 'group-hover:ring-emerald-200' },
+  primero: { bg: 'bg-indigo-50', text: 'text-indigo-900', border: 'border-indigo-100', accent: 'bg-indigo-600', shadow: 'shadow-indigo-900/10', light: 'bg-indigo-100/40', ring: 'group-hover:ring-indigo-200' },
+  segundo: { bg: 'bg-rose-50', text: 'text-rose-900', border: 'border-rose-100', accent: 'bg-rose-600', shadow: 'shadow-rose-900/10', light: 'bg-rose-100/40', ring: 'group-hover:ring-rose-200' },
+  postre: { bg: 'bg-violet-50', text: 'text-violet-900', border: 'border-violet-100', accent: 'bg-violet-600', shadow: 'shadow-violet-900/10', light: 'bg-violet-100/40', ring: 'group-hover:ring-violet-200' },
+  todos: { bg: 'bg-stone-50', text: 'text-stone-900', border: 'border-stone-100', accent: 'bg-stone-900', shadow: 'shadow-stone-900/10', light: 'bg-stone-100/40', ring: 'group-hover:ring-stone-200' }
 };
 
 function App() {
@@ -72,7 +73,7 @@ function App() {
 
   useEffect(() => {
     if (globalVoiceEnabled && !isModalOpen) {
-      speak("GourmetVoice listo. Di: Muestra postres, o Ayuda.");
+      speak("Asistente activado.");
     }
   }, [globalVoiceEnabled, isModalOpen, speak]);
 
@@ -109,52 +110,45 @@ function App() {
   const theme = CATEGORY_COLORS[activeCategory] || CATEGORY_COLORS.todos;
 
   return (
-    <div className={`min-h-screen ${theme.bg} transition-colors duration-1000 pb-24 selection:bg-amber-100`}>
+    <div className={`min-h-screen ${theme.bg} transition-colors duration-1000 pb-24`}>
       <VoiceFeedback status={isModalOpen ? 'idle' : status} />
 
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-2xl border-b border-stone-200/50 shadow-sm">
-        <nav className="max-w-7xl mx-auto px-6 h-24 flex justify-between items-center gap-4">
-          <div className="flex items-center gap-4 shrink-0 cursor-pointer group" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-             <div className="w-12 h-12 bg-stone-900 rounded-2xl flex items-center justify-center text-2xl text-white font-serif shadow-xl group-hover:rotate-6 transition-transform">G</div>
-             <h1 className="text-2xl font-serif font-bold tracking-tight hidden sm:block">GourmetVoice</h1>
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm">
+        <nav className="max-w-7xl mx-auto px-4 h-14 sm:h-16 flex justify-between items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0 cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-stone-900 rounded-lg flex items-center justify-center text-[10px] sm:text-sm text-white font-serif font-black">G</div>
+             <h1 className="text-xs sm:text-sm font-serif font-black tracking-tight hidden xs:block">Gourmet</h1>
           </div>
           
-          <div className="flex-1 max-w-2xl relative">
+          <div className="flex-1 max-w-lg relative">
             <input 
               type="text" 
-              placeholder="Busca por plato o ingrediente..." 
+              placeholder="Buscar..." 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className="w-full pl-14 pr-14 py-4 bg-stone-100 rounded-full border-2 border-transparent focus:bg-white focus:border-stone-200 transition-all outline-none text-base font-bold shadow-inner" 
+              className="w-full pl-8 pr-8 py-1.5 bg-stone-100 rounded-xl border-none focus:bg-white focus:ring-1 focus:ring-stone-200 transition-all outline-none text-[13px] font-bold" 
             />
-            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-stone-300">🔍</div>
+            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 opacity-30 text-[9px]">🔍</div>
             <button 
               onClick={() => setGlobalVoiceEnabled(!globalVoiceEnabled)} 
-              className={`absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all ${globalVoiceEnabled ? 'bg-amber-600 text-white animate-pulse shadow-lg scale-110' : 'bg-stone-200 text-stone-400 hover:text-stone-600'}`}
-              title="Activar Asistente de Voz"
+              className={`absolute right-1 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all ${globalVoiceEnabled ? 'bg-amber-600 text-white animate-pulse' : 'bg-stone-200 text-stone-500'}`}
             >
-              🎤
+              <span className="text-[10px]">🎤</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button onClick={() => setShowHelp(true)} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-stone-100 text-stone-600 hover:bg-stone-200 transition-all font-black text-xl">?</button>
-            <div className="px-5 py-3 bg-stone-900 text-white rounded-2xl shadow-xl font-black text-[11px] hidden lg:block tracking-widest uppercase">
-              {shoppingList.length} Ingredientes
-            </div>
-          </div>
+          <button onClick={() => setShowHelp(true)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-stone-100 text-stone-500 font-black text-[9px]">?</button>
         </nav>
 
-        <div className="max-w-7xl mx-auto px-6 py-4 flex gap-4 overflow-x-auto scrollbar-hide border-b border-stone-100">
+        <div className="max-w-7xl mx-auto px-3 py-1.5 flex gap-1 overflow-x-auto scrollbar-hide">
           {['todos', 'desayuno', 'aperitivo', 'primero', 'segundo', 'postre'].map(cat => {
-            const catTheme = CATEGORY_COLORS[cat];
             const isActive = activeCategory === cat;
             return (
               <button 
                 key={cat} 
                 onClick={() => setActiveCategory(cat)} 
-                className={`px-8 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.2em] transition-all border-2 ${
-                  isActive ? `${catTheme.accent} border-transparent text-white scale-105 shadow-md` : `bg-white text-stone-400 border-stone-100 hover:border-stone-300`
+                className={`px-2.5 py-1 rounded-md text-[7px] font-black uppercase tracking-wider transition-all border shrink-0 ${
+                  isActive ? `bg-stone-900 border-transparent text-white` : `bg-white text-stone-400 border-stone-100`
                 }`}
               >
                 {cat}
@@ -164,51 +158,61 @@ function App() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-16">
+      <main className="max-w-7xl mx-auto px-2 py-3">
+        {/* Grid ajustado: 2 columnas en móvil (defecto), 3 en medium (md:) */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
           {filteredRecipes.map(recipe => {
             const catColor = CATEGORY_COLORS[recipe.category] || CATEGORY_COLORS.todos;
             return (
               <article 
                 key={recipe.id} 
                 onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }}
-                className={`group relative bg-white rounded-[4rem] border-2 ${catColor.border} overflow-hidden hover:shadow-[0_60px_120px_rgba(0,0,0,0.1)] transition-all duration-700 cursor-pointer flex flex-col h-[580px] hover:-translate-y-4`}
+                className={`group relative bg-white rounded-xl border border-stone-100 overflow-hidden shadow-sm transition-all duration-300 cursor-pointer flex flex-col h-full min-h-[200px] sm:min-h-[260px]`}
               >
-                <div className={`relative h-72 flex items-center justify-center p-14 overflow-hidden transition-all duration-700 ${catColor.bg} group-hover:bg-white`}>
-                  <div className={`absolute inset-0 opacity-[0.05] pointer-events-none group-hover:opacity-[0.15] transition-opacity ${catColor.text}`}>
-                    <span className="text-[400px] font-black absolute -top-32 -left-24 leading-none">{recipe.title.charAt(0)}</span>
+                {/* Cabecera Tarjeta: Diseño compacto */}
+                <div className={`relative h-20 sm:h-36 flex items-center justify-center px-2 sm:px-3 overflow-hidden transition-colors ${catColor.bg}`}>
+                  
+                  {/* Título: Ajustado a máximo 14px en móvil/tablet */}
+                  <div className="relative z-10 w-full text-center">
+                    <h3 className={`font-serif font-black text-[12px] xs:text-[13px] sm:text-[14px] leading-tight tracking-tight text-stone-900 px-1 line-clamp-2`}>
+                      {recipe.title}
+                    </h3>
                   </div>
                   
-                  <div className="absolute inset-0 bg-white/0 glass-card"></div>
-                  
-                  <h3 className={`relative z-10 font-serif font-bold text-5xl md:text-6xl text-center leading-[1.05] tracking-tight transition-transform duration-700 group-hover:scale-110 ${catColor.text}`}>
-                    {recipe.title}
-                  </h3>
-                  
-                  <button onClick={(e) => toggleFavorite(e, recipe.id)} className={`absolute bottom-8 right-8 w-16 h-16 rounded-full flex items-center justify-center backdrop-blur-md transition-all border shadow-lg ${favorites.includes(recipe.id) ? `${catColor.accent} text-white border-transparent` : 'bg-white/80 text-stone-300 border-white hover:text-stone-600'}`}>
-                    {favorites.includes(recipe.id) ? '★' : '☆'}
+                  {/* Botón Favorito: Compacto */}
+                  <button 
+                    onClick={(e) => toggleFavorite(e, recipe.id)} 
+                    className={`absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center backdrop-blur-md border shadow-sm z-20 ${favorites.includes(recipe.id) ? `${catColor.accent} text-white border-transparent` : 'bg-white/60 text-stone-300 border-white/50'}`}
+                  >
+                    <span className="text-[8px] sm:text-[9px]">{favorites.includes(recipe.id) ? '★' : '☆'}</span>
                   </button>
                 </div>
 
-                <div className="p-14 flex-1 flex flex-col">
-                  <div className="flex justify-between items-center mb-10">
-                    <span className={`px-5 py-1.5 rounded-xl text-[12px] font-black uppercase tracking-widest ${catColor.bg} ${catColor.text}`}>
+                {/* Cuerpo Tarjeta: Información condensada para móvil */}
+                <div className="p-2 sm:p-3 flex-1 flex flex-col bg-white">
+                  <div className="flex justify-between items-center mb-1 sm:mb-2">
+                    <span className={`px-1 py-0.5 rounded-md text-[6px] sm:text-[7px] font-black uppercase tracking-tighter ${catColor.light} ${catColor.text}`}>
                       {recipe.category}
                     </span>
-                    <span className="text-[12px] font-black uppercase tracking-widest text-stone-400">⏱ {recipe.time}</span>
+                    <span className="text-[6px] sm:text-[7px] font-bold text-stone-400 uppercase">
+                      ⏱ {recipe.time}
+                    </span>
                   </div>
-                  <p className="text-stone-500 text-lg line-clamp-3 leading-relaxed mb-10 italic font-serif opacity-80 group-hover:opacity-100 transition-opacity">
+                  
+                  <p className="text-stone-500 text-[8px] sm:text-[9.5px] line-clamp-2 leading-tight mb-2 font-serif italic opacity-60">
                     {recipe.description}
                   </p>
-                  <div className="mt-auto flex justify-between items-center pt-10 border-t border-stone-50">
-                     <div className="flex gap-3">
+                  
+                  {/* Footer: Acción Simplificada */}
+                  <div className="mt-auto pt-1.5 border-t border-stone-50 flex justify-between items-center">
+                     <div className="flex gap-0.5">
                         {[...Array(3)].map((_, i) => (
-                          <div key={i} className={`w-3 h-3 rounded-full transition-all duration-500 ${i < (recipe.difficulty === 'Baja' ? 1 : recipe.difficulty === 'Media' ? 2 : 3) ? catColor.accent : 'bg-stone-100'}`}></div>
+                          <div key={i} className={`w-0.5 h-0.5 sm:w-1 sm:h-1 rounded-full ${i < (recipe.difficulty === 'Baja' ? 1 : recipe.difficulty === 'Media' ? 2 : 3) ? catColor.accent : 'bg-stone-100'}`}></div>
                         ))}
                      </div>
-                     <span className={`text-[12px] font-black tracking-[0.4em] uppercase transition-all flex items-center gap-3 group-hover:gap-6 ${catColor.text}`}>
-                       PREPARAR <span className="text-2xl transition-transform group-hover:translate-x-2">→</span>
-                     </span>
+                     <div className={`px-1.5 py-0.5 rounded-md text-[6px] font-black tracking-widest uppercase ${catColor.accent} text-white`}>
+                       VER <span className="hidden xs:inline">→</span>
+                     </div>
                   </div>
                 </div>
               </article>
@@ -218,25 +222,21 @@ function App() {
       </main>
 
       {showHelp && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-stone-950/80 backdrop-blur-xl" onClick={() => setShowHelp(false)}></div>
-          <div className="relative w-full max-w-xl bg-white rounded-[3rem] p-12 shadow-2xl animate-in zoom-in-95 duration-300">
-            <h2 className="text-4xl font-serif font-bold mb-8">Comandos de Voz 🎤</h2>
-            <div className="space-y-6">
-              <div className="p-6 bg-stone-50 rounded-2xl">
-                <p className="text-xs font-black uppercase tracking-widest text-amber-600 mb-2">Para Navegar</p>
-                <p className="text-xl font-bold italic text-stone-700">"Muestra postres", "Pon desayunos", "Ver todos"</p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-stone-950/80 backdrop-blur-sm" onClick={() => setShowHelp(false)}></div>
+          <div className="relative w-full max-w-xs bg-white rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 border border-stone-100">
+            <h2 className="text-lg font-serif font-black text-stone-900 mb-4">Comandos</h2>
+            <div className="space-y-3">
+              <div className="p-3 bg-stone-50 rounded-lg">
+                <p className="text-[7px] font-black text-stone-400 mb-1">GLOBAL</p>
+                <p className="text-[11px] font-bold italic text-stone-700 leading-tight">"Muestra desayunos", "Pon postres", "Ver todos"</p>
               </div>
-              <div className="p-6 bg-stone-50 rounded-2xl">
-                <p className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-2">Dentro de una Receta</p>
-                <p className="text-xl font-bold italic text-stone-700">"Siguiente", "Anterior", "Repite el paso", "Dime los ingredientes"</p>
-              </div>
-              <div className="p-6 bg-stone-50 rounded-2xl">
-                <p className="text-xs font-black uppercase tracking-widest text-indigo-600 mb-2">Utilidades</p>
-                <p className="text-xl font-bold italic text-stone-700">"Pon un temporizador de 10 minutos", "Cerrar receta"</p>
+              <div className="p-3 bg-stone-50 rounded-lg">
+                <p className="text-[7px] font-black text-stone-400 mb-1">COCINA</p>
+                <p className="text-[11px] font-bold italic text-stone-700 leading-tight">"Siguiente", "Atrás", "Ingredientes"</p>
               </div>
             </div>
-            <button onClick={() => setShowHelp(false)} className="mt-10 w-full py-5 bg-stone-900 text-white rounded-full font-black text-xs uppercase tracking-widest">Entendido</button>
+            <button onClick={() => setShowHelp(false)} className="mt-5 w-full py-3 bg-stone-900 text-white rounded-lg font-black text-[8px] uppercase tracking-widest">OK</button>
           </div>
         </div>
       )}

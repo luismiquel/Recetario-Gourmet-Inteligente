@@ -59,6 +59,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
   const [viewMode, setViewMode] = useState<ViewMode>('full');
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const [addedToList, setAddedToList] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -137,6 +138,18 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
     setTimeout(() => setAddedToList(false), 3000);
   };
 
+  const handleCopyIngredients = () => {
+    if (!recipe) return;
+    const text = recipe.ingredients.join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      speak("Ingredientes copiados.");
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(err => {
+      console.error('Error al copiar:', err);
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:p-10 animate-in fade-in duration-500 overflow-hidden">
       <div className="absolute inset-0 bg-stone-950/90 backdrop-blur-xl" onClick={onClose}></div>
@@ -150,7 +163,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
              </button>
            </div>
           
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-center tracking-tight leading-tight text-stone-900 mb-8 max-w-4xl">
+          <h2 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold text-center tracking-tight leading-tight text-stone-900 mb-8 max-w-5xl">
             {recipe.title}
           </h2>
 
@@ -163,22 +176,32 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
         <div className="flex-1 overflow-y-auto p-10 md:p-16 lg:p-20 scrollbar-hide bg-white">
           <div className={`transition-all duration-700 ease-in-out ${viewMode === 'ingredients' ? 'max-w-4xl mx-auto' : 'grid lg:grid-cols-12 gap-16 lg:gap-24'}`}>
             <aside className={`${viewMode === 'ingredients' ? 'lg:col-span-12' : 'lg:col-span-5'} space-y-10`}>
-              <div className="border-b-2 border-stone-100 pb-6 mb-8 flex justify-between items-center">
-                <h3 className="text-2xl font-serif font-bold text-stone-900">Mise en Place</h3>
-                <div className="flex items-center gap-3">
+              <div className="border-b-2 border-stone-100 pb-6 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h3 className="text-3xl font-serif font-bold text-stone-900 tracking-tight">Mise en Place</h3>
+                <div className="flex flex-wrap items-center gap-2">
                   <VoiceStatusOrb status={status} accentColor={theme.accent} />
-                  <button onClick={handleAddToShoppingList} className={`px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-widest text-white transition-all shadow-md active:scale-95 ${addedToList ? 'bg-emerald-500' : theme.accent}`}>
+                  <button 
+                    onClick={handleCopyIngredients} 
+                    className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest text-white transition-all shadow-md active:scale-95 ${copied ? 'bg-emerald-500' : 'bg-stone-800'}`}
+                    title="Copiar ingredientes al portapapeles"
+                  >
+                    {copied ? '✓ COPIADO' : '📋 COPIAR'}
+                  </button>
+                  <button 
+                    onClick={handleAddToShoppingList} 
+                    className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest text-white transition-all shadow-md active:scale-95 ${addedToList ? 'bg-emerald-500' : theme.accent}`}
+                  >
                     {addedToList ? '✓ AÑADIDO' : '+ LISTA COMPRA'}
                   </button>
                 </div>
               </div>
-              <ul className={`grid gap-4 ${viewMode === 'ingredients' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+              <ul className={`grid gap-5 ${viewMode === 'ingredients' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
                 {recipe.ingredients.map((ing, i) => (
-                  <li key={i} onClick={() => { const n = new Set(checkedIngredients); n.has(i) ? n.delete(i) : n.add(i); setCheckedIngredients(n); }} className="flex items-center gap-4 cursor-pointer group p-3 rounded-2xl hover:bg-stone-50 transition-all">
-                    <div className={`w-8 h-8 rounded-lg border-2 transition-all flex items-center justify-center shrink-0 ${checkedIngredients.has(i) ? `${theme.accent} border-transparent` : 'border-stone-200 group-hover:border-stone-400'}`}>
-                      {checkedIngredients.has(i) && <span className="text-white text-xs font-bold">✓</span>}
+                  <li key={i} onClick={() => { const n = new Set(checkedIngredients); n.has(i) ? n.delete(i) : n.add(i); setCheckedIngredients(n); }} className="flex items-center gap-5 cursor-pointer group p-4 rounded-2xl hover:bg-stone-50 transition-all">
+                    <div className={`w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center shrink-0 ${checkedIngredients.has(i) ? `${theme.accent} border-transparent` : 'border-stone-200 group-hover:border-stone-400'}`}>
+                      {checkedIngredients.has(i) && <span className="text-white text-lg font-black">✓</span>}
                     </div>
-                    <span className={`font-sans font-bold text-lg md:text-xl tracking-tight leading-tight ${checkedIngredients.has(i) ? 'text-stone-300 line-through opacity-40 italic' : 'text-stone-800'}`}>
+                    <span className={`font-sans font-bold text-xl md:text-2xl lg:text-3xl tracking-tight leading-snug ${checkedIngredients.has(i) ? 'text-stone-300 line-through opacity-40 italic' : 'text-stone-800'}`}>
                       {ing}
                     </span>
                   </li>
@@ -188,19 +211,19 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
             {viewMode === 'full' && (
               <main className="lg:col-span-7 space-y-8">
                 <div className="flex justify-between items-center border-b-2 border-stone-100 pb-6 mb-8">
-                   <h3 className="text-2xl font-serif font-bold text-stone-900">Preparación</h3>
+                   <h3 className="text-3xl font-serif font-bold text-stone-900 tracking-tight">Preparación</h3>
                    {timerSeconds !== null && (
-                     <div className="bg-amber-100 px-4 py-1.5 rounded-full border border-amber-200">
-                       <span className="text-amber-700 font-black tabular-nums tracking-wider text-sm">{formatTime(timerSeconds)}</span>
+                     <div className="bg-amber-100 px-6 py-2.5 rounded-full border border-amber-200 shadow-sm">
+                       <span className="text-amber-700 font-black tabular-nums tracking-widest text-lg">{formatTime(timerSeconds)}</span>
                      </div>
                    )}
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-8">
                   {recipe.steps.map((step, i) => (
-                    <div key={i} onClick={() => setActiveStep(i)} className={`p-8 rounded-[2rem] border-2 transition-all cursor-pointer relative group ${activeStep === i ? `border-stone-900 bg-stone-50 shadow-xl scale-[1.01]` : 'border-transparent opacity-30 hover:opacity-100'}`}>
-                      <div className="flex gap-6">
-                        <span className={`text-4xl font-black opacity-10 ${activeStep === i ? theme.text : 'text-stone-300'}`}>{String(i + 1).padStart(2, '0')}</span>
-                        <p className={`text-xl md:text-2xl font-sans font-black leading-tight tracking-tight ${activeStep === i ? 'text-stone-900' : 'text-stone-600'}`}>
+                    <div key={i} onClick={() => setActiveStep(i)} className={`p-10 rounded-[2.5rem] border-2 transition-all cursor-pointer relative group ${activeStep === i ? `border-stone-900 bg-stone-50 shadow-2xl scale-[1.02]` : 'border-transparent opacity-30 hover:opacity-100'}`}>
+                      <div className="flex gap-8">
+                        <span className={`text-5xl font-black opacity-20 ${activeStep === i ? theme.text : 'text-stone-300'}`}>{String(i + 1).padStart(2, '0')}</span>
+                        <p className={`text-2xl md:text-3xl lg:text-4xl font-sans font-black leading-tight tracking-tight ${activeStep === i ? 'text-stone-900' : 'text-stone-600'}`}>
                           {step}
                         </p>
                       </div>

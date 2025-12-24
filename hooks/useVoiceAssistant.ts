@@ -1,55 +1,67 @@
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { IWindow, VoiceStatus } from '../types.ts';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { VoiceStatus, IWindow } from '../types.ts';
+
+declare const window: IWindow;
 
 interface UseVoiceAssistantProps {
-  onCommand: (command: string) => void;
   enabled: boolean;
+  onCommand: (command: string) => void;
 }
 
-export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps) => {
+/**
+ * Hook personalizado para manejar el asistente de voz utilizando exclusivamente 
+ * las APIs nativas del navegador. Mejorado para evitar solapamientos y mejorar la reconexión.
+ */
+export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps) => {
   const [status, setStatus] = useState<VoiceStatus>('idle');
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis);
+  const isSpeakingRef = useRef<boolean>(false);
   
-  const onCommandRef = useRef(onCommand);
+  const statusRef = useRef<VoiceStatus>('idle');
   useEffect(() => {
-    onCommandRef.current = onCommand;
-  }, [onCommand]);
+    statusRef.current = status;
+  }, [status]);
 
-  const isSpeakingRef = useRef(false);
-  const isListeningRef = useRef(false);
-  const isStartingRef = useRef(false);
-  const restartTimerRef = useRef<number | null>(null);
+  const speak = useCallback((text: string) => {
+    if (!enabled || !synthRef.current) return;
 
-  const stopRecognition = useCallback(() => {
+    synthRef.current.cancel();
+    isSpeakingRef.current = true;
+
     if (recognitionRef.current) {
-      try {
-        recognitionRef.current.abort();
-      } catch (e) {}
-      isListeningRef.current = false;
-      isStartingRef.current = false;
+      try { recognitionRef.current.stop(); } catch (e) {}
     }
-  }, []);
 
-  const startRecognition = useCallback(() => {
-    if (isSpeakingRef.current || isListeningRef.current || isStartingRef.current || !enabled) return;
+    setStatus('speaking');
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'es-ES';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
 
-    try {
-      isStartingRef.current = true;
-      recognitionRef.current.start();
-    } catch (e) {
-      isStartingRef.current = false;
-      if (e instanceof Error && (e.message.includes('already started') || e.name === 'InvalidStateError')) {
-        isListeningRef.current = true;
+    utterance.onend = () => {
+      isSpeakingRef.current = false;
+      setStatus('listening');
+      if (enabled && recognitionRef.current) {
+        try { recognitionRef.current.start(); } catch (e) {}
       }
-    }
+    };
+
+    utterance.onerror = () => {
+      isSpeakingRef.current = false;
+      setStatus('idle');
+      if (enabled && recognitionRef.current) {
+        try { recognitionRef.current.start(); } catch (e) {}
+      }
+    };
+
+    synthRef.current.speak(utterance);
   }, [enabled]);
 
   useEffect(() => {
-    const win = window as unknown as IWindow;
-    const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
-
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
     if (!SpeechRecognition) {
       setStatus('error');
       return;
@@ -57,43 +69,26 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
 
     if (!recognitionRef.current) {
       const recognition = new SpeechRecognition();
-      recognition.lang = 'es-ES';
-      recognition.continuous = false;
+      recognition.continuous = true;
       recognition.interimResults = false;
-
-      recognition.onstart = () => {
-        setStatus('listening');
-        isListeningRef.current = true;
-        isStartingRef.current = false;
-      };
+      recognition.lang = 'es-ES';
 
       recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript.toLowerCase();
-        setStatus('processing');
-        onCommandRef.current(transcript);
+        const last = event.results.length - 1;
+        const command = event.results[last][0].transcript;
+        onCommand(command);
       };
 
       recognition.onerror = (event: any) => {
-        isListeningRef.current = false;
-        isStartingRef.current = false;
-        if (event.error === 'no-speech') {
-          setStatus('idle');
-        } else if (event.error === 'not-allowed') {
-          setStatus('error');
-        } else {
-          console.warn("Recognition error:", event.error);
-          setStatus('idle');
-        }
+        if (event.error === 'no-speech') return;
+        if (event.error === 'not-allowed') setStatus('error');
       };
 
       recognition.onend = () => {
-        isListeningRef.current = false;
-        isStartingRef.current = false;
         if (enabled && !isSpeakingRef.current) {
-          if (restartTimerRef.current) window.clearTimeout(restartTimerRef.current);
-          restartTimerRef.current = window.setTimeout(startRecognition, 600);
-        } else if (!enabled) {
-          setStatus('idle');
+          try {
+            recognition.start();
+          } catch (e) {}
         }
       };
 
@@ -101,45 +96,23 @@ export const useVoiceAssistant = ({ onCommand, enabled }: UseVoiceAssistantProps
     }
 
     if (enabled) {
-      startRecognition();
+      try {
+        if (!isSpeakingRef.current) {
+          recognitionRef.current.start();
+          setStatus('listening');
+        }
+      } catch (e) {}
     } else {
-      stopRecognition();
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
       setStatus('idle');
     }
 
     return () => {
-      if (restartTimerRef.current) window.clearTimeout(restartTimerRef.current);
-      stopRecognition();
+      if (recognitionRef.current) recognitionRef.current.stop();
     };
-  }, [enabled, startRecognition, stopRecognition]);
-
-  const speak = useCallback((text: string) => {
-    if (!synthRef.current) return;
-
-    stopRecognition();
-    isSpeakingRef.current = true;
-    synthRef.current.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'es-ES';
-    utterance.pitch = 1.0;
-    utterance.rate = 1.1;
-
-    utterance.onstart = () => setStatus('speaking');
-    
-    const handleEnd = () => {
-      isSpeakingRef.current = false;
-      if (enabled) {
-        setTimeout(startRecognition, 1200);
-      } else {
-        setStatus('idle');
-      }
-    };
-
-    utterance.onend = handleEnd;
-    utterance.onerror = handleEnd;
-    synthRef.current.speak(utterance);
-  }, [enabled, startRecognition, stopRecognition]);
+  }, [enabled, onCommand]);
 
   return { status, speak };
 };

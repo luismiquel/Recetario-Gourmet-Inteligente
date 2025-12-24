@@ -83,32 +83,32 @@ const TECNICAS = {
 
 const TITULOS_POOL = {
   desayuno: [
-    'Huevos Benedictinos', 'Shakshuka con Queso Feta', 'Bowl de Açaí y Granola', 'Tostada de Aguacate y Poché',
-    'Tortitas de Avena y Plátano', 'Gofres de Lieja con Frutas', 'Croissant de Almendras', 'Bagel de Salmón y Crema',
-    'Omelette de Trufa y Espárragos', 'Porridge de Chía y Mango', 'Tostada Francesa Brioche', 'Bowl de Kéfir y Chía',
-    'Huevos Rotos con Jamón', 'Muesli Bircher Suizo', 'Smoothie Bowl de Espirulina', 'Revuelto de Setas Silvestres',
-    'Quiche de Espinacas de Mañana', 'Burrito de Desayuno Tex-Mex', 'Crepes de Ricotta y Miel', 'Pancakes de Arándanos',
+    'Huevos Benedictinos', 'Shakshuka con Queso Feta', 'Bol de Açaí y Granola', 'Tostada de Aguacate y Poché',
+    'Tortitas de Avena y Plátano', 'Gofres de Lieja con Frutas', 'Suizo de Almendras', 'Bagel de Salmón y Crema',
+    'Tortilla de Trufa y Espárragos', 'Gachas de Chía y Mango', 'Tostada Francesa de Brioche', 'Bol de Kéfir y Semillas',
+    'Huevos Rotos con Jamón', 'Muesli Suizo Original', 'Batido en Bol de Espirulina', 'Revuelto de Setas Silvestres',
+    'Pastel de Espinacas Matinal', 'Burrito de Desayuno Mexicano', 'Crepes de Ricota y Miel', 'Tortitas de Arándanos',
     'Arepa con Perico Gourmet', 'Tostada de Mantequilla de Almendra', 'Chilaquiles Verdes con Huevo', 'Sándwich Croque Madame',
-    'Yogur con Granola de Lavanda', 'Tostada de Higo y Requesón', 'Smoothie de Frutos del Bosque', 'Tarta de Tomate y Albahaca',
-    'Huevos al Plato con Chorizo', 'Wrap de Pavo y Huevo', 'Bowl de Quinoa Dulce', 'Tortilla de Patatas Matinal',
+    'Yogur con Granola de Lavanda', 'Tostada de Higo y Requesón', 'Batido de Frutos del Bosque', 'Tarta de Tomate y Albahaca',
+    'Huevos al Plato con Chorizo', 'Enrollado de Pavo y Huevo', 'Bol de Quinoa Dulce', 'Tortilla de Patatas Matinal',
     'Rollitos de Canela Caseros', 'Pudin de Semillas y Coco', 'Gofres de Espelta y Cacao', 'Muffins de Calabacín y Huevo',
-    'Tostada de Queso de Cabra y Miel', 'Revuelto de Salmón Ahumado', 'Bowl de Fruta Tropical', 'Té Matcha con Tostada Zen'
+    'Tostada de Queso de Cabra y Miel', 'Revuelto de Salmón Ahumado', 'Bol de Fruta Tropical', 'Té Matcha con Tostada Zen'
   ],
   aperitivo: [
     'Croquetas de Jamón Ibérico', 'Gildas de Anchoa y Oliva', 'Patatas Bravas Gourmet', 'Ensaladilla de Ventresca',
     'Boquerones en Vinagre Real', 'Pimientos Rellenos de Bacalao', 'Tortilla de Patata Trufada', 'Salmorejo Cordobés',
     'Gambas al Ajillo con Guindilla', 'Pulpo a la Gallega Tradicional', 'Buñuelos de Queso Mahón', 'Montadito de Pringá',
     'Champiñones Rellenos de Jamón', 'Mejillones en Escabeche', 'Bombones de Queso y Nueces', 'Crujiente de Berenjena',
-    'Aceitunas Aliñadas de la Casa', 'Tabla de Quesos Artesanos', 'Hummus de Garbanzo y Tahini', 'Brocheta de Tomatitos y Mozzarella'
+    'Aceitunas Aliñadas de la Casa', 'Tabla de Quesos Artesanos', 'Hummus de Garbanzo y Sésamo', 'Brocheta de Tomatitos y Mozzarella'
   ],
   primero: [
     'Gazpacho de Fresas y Tomate', 'Sopa de Cebolla Gratinada', 'Lentejas con Foie', 'Arroz a Banda del Delta',
     'Pasta al Pesto Genovés', 'Crema de Calabaza y Jengibre', 'Canelones de Asado', 'Ensalada César con Pollo Campero',
-    'Risotto de Boletus Edulis', 'Vichyssoise con Puerro Joven', 'Ensalada de Quinoa y Granada', 'Pasta Carbonara Original',
-    'Sopa de Pescado de Roca', 'Lasaña de Verduras de la Huerta', 'Minestrone de Estación', 'Crema de Marisco Real'
+    'Arroz Meloso de Setas', 'Crema de Puerro Joven', 'Ensalada de Quinoa y Granada', 'Pasta Carbonara Original',
+    'Sopa de Pescado de Roca', 'Lasaña de Verduras de la Huerta', 'Sopa de Verduras de Estación', 'Crema de Marisco Real'
   ],
   segundo: [
-    'Cochinillo Asado a Baja Temperatura', 'Bacalao al Pil-Pil Esmeralda', 'Solomillo de Ternera al Oporto', 'Merluza en Salsa Verde',
+    'Cochinillo Asado a Fuego Lento', 'Bacalao al Pil-Pil Esmeralda', 'Solomillo de Ternera al Oporto', 'Merluza en Salsa Verde',
     'Carrilleras de Cerdo al Vino Tinto', 'Pollo de Corral en Pepitoria', 'Lubina a la Sal de Manantial', 'Cordero Lechal al Horno',
     'Albóndigas con Salsa de Almendra', 'Rabo de Toro Estofado', 'Entrecot a la Pimienta Verde', 'Atún Rojo con Sésamo',
     'Pato a la Naranja Amarga', 'Estofado de Venado y Setas', 'Lubina con Costra de Hierbas', 'Salmonetes con Escamas de Patata'
@@ -116,8 +116,8 @@ const TITULOS_POOL = {
   postre: [
     'Arroz con Leche y Caramelo', 'Tarta de Queso Fluida', 'Natillas de la Abuela', 'Torrijas de Brioche',
     'Flan de Huevo y Vainilla', 'Mousse de Chocolate al 70%', 'Tarta de Santiago Original', 'Crema Catalana Quemada',
-    'Brownie de Nueces Macadamia', 'Coulant de Chocolate Negro', 'Sorbete de Limón y Cava', 'Tarta de Manzana Reineta',
-    'Milhojas de Crema y Nata', 'Panna Cotta de Frutos Rojos', 'Tocino de Cielo de Jerez', 'Peras al Vino con Canela'
+    'Bizcocho de Nueces Macadamia', 'Volcán de Chocolate Negro', 'Sorbete de Limón y Cava', 'Tarta de Manzana Reineta',
+    'Milhojas de Crema y Nata', 'Postre de Frutos Rojos', 'Tocino de Cielo de Jerez', 'Peras al Vino con Canela'
   ]
 };
 
@@ -140,9 +140,9 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
       if (cat === 'desayuno') {
         if (tLow.includes('huevo') || tLow.includes('omelette') || tLow.includes('revuelto') || tLow.includes('shakshuka') || tLow.includes('madame')) {
           tecnica = TECNICAS.huevos;
-        } else if (tLow.includes('bowl') || tLow.includes('pudding') || tLow.includes('yogur') || tLow.includes('muesli') || tLow.includes('chía')) {
+        } else if (tLow.includes('bol') || tLow.includes('pudin') || tLow.includes('yogur') || tLow.includes('muesli') || tLow.includes('chía')) {
           tecnica = TECNICAS.saludable;
-        } else if (tLow.includes('tortitas') || tLow.includes('pancakes') || tLow.includes('gofres') || tLow.includes('crepes') || tLow.includes('croissant') || tLow.includes('rollitos') || tLow.includes('tarta')) {
+        } else if (tLow.includes('tortitas') || tLow.includes('gofres') || tLow.includes('crepes') || tLow.includes('suizo') || tLow.includes('rollitos') || tLow.includes('tarta')) {
           tecnica = TECNICAS.reposteria;
         } else {
           tecnica = TECNICAS.huevos;
