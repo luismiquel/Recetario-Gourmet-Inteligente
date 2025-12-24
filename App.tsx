@@ -159,7 +159,7 @@ function App() {
       </header>
 
       <main className="max-w-7xl mx-auto px-2 py-3">
-        {/* Diseño: 2 columnas en móviles, 3 en tablets (md:), 4 en desktops grandes */}
+        {/* Responsive Grid: 2 cols on mobile, 3 cols on tablet (md), 4 on large desktops */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
           {filteredRecipes.map(recipe => {
             const catColor = CATEGORY_COLORS[recipe.category] || CATEGORY_COLORS.todos;
@@ -171,8 +171,8 @@ function App() {
               >
                 <div className={`relative h-20 sm:h-36 flex items-center justify-center px-2 sm:px-3 overflow-hidden transition-colors ${catColor.bg}`}>
                   <div className="relative z-10 w-full text-center">
-                    {/* Fuente: Máximo 14px para asegurar legibilidad en tarjetas compactas */}
-                    <h3 className={`font-serif font-black text-[11px] xs:text-[12px] sm:text-[14px] leading-tight tracking-tight text-stone-900 px-1 line-clamp-2`}>
+                    {/* Título optimizado: Máximo 14px y fuente Lato para limpieza visual */}
+                    <h3 className={`font-sans font-black text-[13px] sm:text-[14px] leading-tight tracking-tight text-stone-900 px-1 line-clamp-2`}>
                       {recipe.title}
                     </h3>
                   </div>
@@ -195,7 +195,7 @@ function App() {
                     </span>
                   </div>
                   
-                  <p className="text-stone-500 text-[8px] sm:text-[9.5px] line-clamp-2 leading-tight mb-2 font-serif italic opacity-60">
+                  <p className="text-stone-500 text-[8px] sm:text-[9.5px] line-clamp-2 leading-tight mb-2 font-sans italic opacity-60">
                     {recipe.description}
                   </p>
                   
@@ -220,7 +220,7 @@ function App() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-stone-950/80 backdrop-blur-sm" onClick={() => setShowHelp(false)}></div>
           <div className="relative w-full max-w-xs bg-white rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 border border-stone-100">
-            <h2 className="text-lg font-serif font-black text-stone-900 mb-4">Comandos</h2>
+            <h2 className="text-lg font-serif font-black text-stone-900 mb-4 text-center">Asistente</h2>
             <div className="space-y-3">
               <div className="p-3 bg-stone-50 rounded-lg">
                 <p className="text-[7px] font-black text-stone-400 mb-1">GLOBAL</p>
