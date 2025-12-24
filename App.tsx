@@ -159,7 +159,7 @@ function App() {
       </header>
 
       <main className="max-w-7xl mx-auto px-2 py-3">
-        {/* Responsive Grid: 2 cols on mobile, 3 cols on tablet (md), 4 on large desktops */}
+        {/* Diseño: 2 columnas en móvil, 3 en tablet (md) */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
           {filteredRecipes.map(recipe => {
             const catColor = CATEGORY_COLORS[recipe.category] || CATEGORY_COLORS.todos;
@@ -171,7 +171,7 @@ function App() {
               >
                 <div className={`relative h-20 sm:h-36 flex items-center justify-center px-2 sm:px-3 overflow-hidden transition-colors ${catColor.bg}`}>
                   <div className="relative z-10 w-full text-center">
-                    {/* Título optimizado: Máximo 14px y fuente Lato para limpieza visual */}
+                    {/* Fuente Lato a exactamente 14px para tarjetas */}
                     <h3 className={`font-sans font-black text-[13px] sm:text-[14px] leading-tight tracking-tight text-stone-900 px-1 line-clamp-2`}>
                       {recipe.title}
                     </h3>

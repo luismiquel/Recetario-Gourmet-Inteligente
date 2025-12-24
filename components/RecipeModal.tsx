@@ -176,7 +176,6 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
         <div className="flex-1 overflow-y-auto p-8 md:p-12 scrollbar-hide bg-white">
           <div className={`transition-all duration-700 ease-in-out ${viewMode === 'ingredients' ? 'max-w-4xl mx-auto' : 'grid lg:grid-cols-12 gap-12 lg:gap-16'}`}>
             
-            {/* Sección de Ingredientes */}
             <aside className={`${viewMode === 'ingredients' ? 'lg:col-span-12' : 'lg:col-span-4'} space-y-8`}>
               <div className="border-b-2 border-stone-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h3 className="text-2xl font-serif font-bold text-stone-900 tracking-tight">Ingredientes</h3>
@@ -186,13 +185,13 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
                     onClick={handleCopyIngredients} 
                     className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest text-white transition-all shadow-md active:scale-95 ${copied ? 'bg-emerald-500' : 'bg-stone-800'}`}
                   >
-                    {copied ? '✓ COPIADO' : '📋 COPIAR'}
+                    {copied ? '✓ COPIADO' : '📋 COPIAR INGREDIENTES'}
                   </button>
                   <button 
                     onClick={handleAddToShoppingList} 
                     className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest text-white transition-all shadow-md active:scale-95 ${addedToList ? 'bg-emerald-500' : theme.accent}`}
                   >
-                    {addedToList ? '✓ AÑADIDO' : '+ LISTA'}
+                    {addedToList ? '✓ AÑADIDO' : '+ LISTA COMPRA'}
                   </button>
                 </div>
               </div>
@@ -202,8 +201,8 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
                     <div className={`w-8 h-8 rounded-lg border-2 transition-all flex items-center justify-center shrink-0 ${checkedIngredients.has(i) ? `${theme.accent} border-transparent shadow-sm` : 'border-stone-200 group-hover:border-stone-300'}`}>
                       {checkedIngredients.has(i) && <span className="text-white text-sm font-black">✓</span>}
                     </div>
-                    {/* Tamaño ajustado a 24px (text-2xl) para legibilidad extrema */}
-                    <span className={`font-sans font-medium text-xl md:text-2xl tracking-tight leading-snug transition-opacity ${checkedIngredients.has(i) ? 'text-stone-300 line-through italic opacity-50' : 'text-stone-800'}`}>
+                    {/* Tamaño forzado a 24px con Lato */}
+                    <span className={`font-sans font-medium text-[24px] tracking-tight leading-snug transition-opacity ${checkedIngredients.has(i) ? 'text-stone-300 line-through italic opacity-50' : 'text-stone-800'}`}>
                       {ing}
                     </span>
                   </li>
@@ -211,7 +210,6 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
               </ul>
             </aside>
 
-            {/* Sección de Pasos / Modo Cocina */}
             {viewMode === 'full' && (
               <main className="lg:col-span-8 space-y-6">
                 <div className="flex justify-between items-center border-b-2 border-stone-100 pb-4">
@@ -234,8 +232,8 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
                         <span className={`text-4xl font-black opacity-10 ${activeStep === i ? theme.text : 'text-stone-300'}`}>
                           {String(i + 1).padStart(2, '0')}
                         </span>
-                        {/* Tamaño ajustado a 30px (text-3xl) para el modo cocina */}
-                        <p className={`text-xl md:text-3xl font-sans font-bold leading-tight tracking-tight ${activeStep === i ? 'text-stone-900' : 'text-stone-600'}`}>
+                        {/* Tamaño forzado a 30px con Lato */}
+                        <p className={`text-[30px] font-sans font-bold leading-tight tracking-tight ${activeStep === i ? 'text-stone-900' : 'text-stone-600'}`}>
                           {step}
                         </p>
                       </div>
