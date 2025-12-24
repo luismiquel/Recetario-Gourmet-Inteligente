@@ -159,7 +159,7 @@ function App() {
       </header>
 
       <main className="max-w-7xl mx-auto px-2 py-3">
-        {/* Grid ajustado: 2 columnas en móvil (defecto), 3 en medium (md:) */}
+        {/* Diseño: 2 columnas en móviles, 3 en tablets (md:), 4 en desktops grandes */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
           {filteredRecipes.map(recipe => {
             const catColor = CATEGORY_COLORS[recipe.category] || CATEGORY_COLORS.todos;
@@ -167,19 +167,16 @@ function App() {
               <article 
                 key={recipe.id} 
                 onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }}
-                className={`group relative bg-white rounded-xl border border-stone-100 overflow-hidden shadow-sm transition-all duration-300 cursor-pointer flex flex-col h-full min-h-[200px] sm:min-h-[260px]`}
+                className={`group relative bg-white rounded-xl border border-stone-100 overflow-hidden shadow-sm transition-all duration-300 cursor-pointer flex flex-col h-full min-h-[190px] sm:min-h-[260px]`}
               >
-                {/* Cabecera Tarjeta: Diseño compacto */}
                 <div className={`relative h-20 sm:h-36 flex items-center justify-center px-2 sm:px-3 overflow-hidden transition-colors ${catColor.bg}`}>
-                  
-                  {/* Título: Ajustado a máximo 14px en móvil/tablet */}
                   <div className="relative z-10 w-full text-center">
-                    <h3 className={`font-serif font-black text-[12px] xs:text-[13px] sm:text-[14px] leading-tight tracking-tight text-stone-900 px-1 line-clamp-2`}>
+                    {/* Fuente: Máximo 14px para asegurar legibilidad en tarjetas compactas */}
+                    <h3 className={`font-serif font-black text-[11px] xs:text-[12px] sm:text-[14px] leading-tight tracking-tight text-stone-900 px-1 line-clamp-2`}>
                       {recipe.title}
                     </h3>
                   </div>
                   
-                  {/* Botón Favorito: Compacto */}
                   <button 
                     onClick={(e) => toggleFavorite(e, recipe.id)} 
                     className={`absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center backdrop-blur-md border shadow-sm z-20 ${favorites.includes(recipe.id) ? `${catColor.accent} text-white border-transparent` : 'bg-white/60 text-stone-300 border-white/50'}`}
@@ -188,9 +185,8 @@ function App() {
                   </button>
                 </div>
 
-                {/* Cuerpo Tarjeta: Información condensada para móvil */}
                 <div className="p-2 sm:p-3 flex-1 flex flex-col bg-white">
-                  <div className="flex justify-between items-center mb-1 sm:mb-2">
+                  <div className="flex justify-between items-center mb-1">
                     <span className={`px-1 py-0.5 rounded-md text-[6px] sm:text-[7px] font-black uppercase tracking-tighter ${catColor.light} ${catColor.text}`}>
                       {recipe.category}
                     </span>
@@ -203,7 +199,6 @@ function App() {
                     {recipe.description}
                   </p>
                   
-                  {/* Footer: Acción Simplificada */}
                   <div className="mt-auto pt-1.5 border-t border-stone-50 flex justify-between items-center">
                      <div className="flex gap-0.5">
                         {[...Array(3)].map((_, i) => (

@@ -3,95 +3,95 @@ import { Recipe } from './types.ts';
 
 const TECNICAS = {
   arroz: {
-    ing: ['250g de Arroz Bomba', '750ml de Caldo de ave', '2 hebras de Azafrán', '1 Pimiento rojo', '100g de Judía verde', '1 Tomate rallado', 'Aceite de Oliva Virgen Extra'],
+    ing: ['250g de Arroz Bomba', '750ml de Caldo de ave casero', '2 hebras de Azafrán puro', '1 Pimiento rojo', '100g de Judía verde plana', '1 Tomate maduro rallado', 'Aceite de Oliva Virgen Extra'],
     pasos: [
-      "Sofreír el pimiento y las verduras en aceite de oliva hasta que doren.",
-      "Añadir el tomate rallado y cocinar hasta que el agua se evapore.",
-      "Incorporar el arroz y nacarar durante 2 minutos para sellar el grano.",
+      "Sofreír el pimiento y las verduras en aceite de oliva hasta que doren ligeramente.",
+      "Añadir el tomate rallado y cocinar hasta que pierda todo el agua.",
+      "Incorporar el arroz y nacarar durante 2 minutos para sellar bien el grano.",
       "Verter el caldo caliente con el azafrán y cocer 18 minutos sin remover.",
-      "Dejar reposar 5 minutos con un paño antes de servir."
+      "Dejar reposar 5 minutos con un paño limpio antes de servir."
     ],
-    tips: ["El sofrito lento es la base de todo buen arroz.", "Usa un recipiente de base ancha para que el arroz no se apile."]
+    tips: ["El secreto es un sofrito lento y con mucha paciencia.", "Utiliza un recipiente de base ancha para que el arroz no se apile."]
   },
   guiso: {
-    ing: ['500g de Carne de ternera o ave', '2 Patatas medianas', '2 Zanahorias', '1 Cebolla blanca', '200ml de Vino tinto o blanco', '1 Hoja de laurel', 'Pimentón de la Vera'],
+    ing: ['500g de Carne de ternera o ave', '2 Patatas medianas', '2 Zanahorias', '1 Cebolla blanca picada', '200ml de Vino tinto o blanco', '1 Hoja de laurel', 'Pimentón de la Vera'],
     pasos: [
       "Sellar la proteína a fuego fuerte en una olla con un chorro de aceite.",
       "Añadir la cebolla y zanahoria picadas y pochar a fuego lento con el laurel.",
-      "Verter el vino y dejar reducir a la mitad para evaporar el alcohol.",
-      "Cubrir con agua o caldo y cocinar a fuego suave.",
-      "Añadir las patatas chascadas al final para espesar la salsa con su almidón."
+      "Verter el vino y dejar reducir a la mitad para que evapore el alcohol.",
+      "Cubrir con agua o caldo y cocinar a fuego suave hasta que esté tierno.",
+      "Añadir las patatas chascadas al final para espesar la salsa naturalmente."
     ],
-    tips: ["Cocinar a fuego muy lento asegura una textura melosa.", "Si el guiso queda líquido, tritura una patata y añádela de nuevo."]
+    tips: ["Cocinar a fuego muy lento asegura una textura melosa y tierna.", "Si el guiso queda líquido, tritura una patata y añádela de nuevo."]
   },
   ensalada: {
-    ing: ['200g de Brotes tiernos o vegetales base', 'Fruta fresca de temporada', '100ml de Aceite de oliva virgen', '30ml de Vinagre balsámico', '50g de Frutos secos tostados'],
+    ing: ['200g de Brotes tiernos de temporada', 'Fruta fresca cortada', '100ml de Aceite de oliva virgen', '30ml de Vinagre balsámico', '50g de Frutos secos tostados'],
     pasos: [
-      "Lavar y secar meticulosamente las hojas para que el aliño se adhiera bien.",
-      "Trocear los vegetales en tamaños de bocado elegantes.",
-      "Preparar la vinagreta emulsionando el aceite, el vinagre y una pizca de sal.",
-      "Añadir los elementos crujientes y la fruta al final.",
+      "Lavar y secar muy bien las hojas para que el aliño no resbale.",
+      "Trocear los vegetales en tamaños uniformes de bocado.",
+      "Preparar la vinagreta emulsionando bien el aceite y el vinagre.",
+      "Añadir los elementos crujientes y la fruta justo al final.",
       "Aliñar en el último segundo antes de llevar a la mesa."
     ],
-    tips: ["La temperatura de los ingredientes es clave: todo bien frío.", "No abuses del vinagre para no enmascarar el sabor del vegetal."]
+    tips: ["La temperatura es clave: mantén todos los ingredientes bien fríos.", "No abuses del vinagre para no tapar el sabor del vegetal."]
   },
   asado: {
-    ing: ['1 Pieza principal (Carne, Pescado o Verdura)', '3 Patatas para asar', '4 Dientes de ajo', '1 Manojo de Hierbas frescas', '150ml de Vino blanco seco'],
+    ing: ['1 Pieza principal (Carne, Pescado o Verdura)', '3 Patatas para asar', '4 Dientes de ajo machacados', '1 Manojo de Hierbas frescas', '150ml de Vino blanco seco'],
     pasos: [
       "Precalentar el horno a 190 grados con calor arriba y abajo.",
-      "Colocar una base de verduras de raíz cortadas finamente.",
-      "Marinar la pieza principal con aceite, hierbas y ajos machacados.",
-      "Hornear regando con el vino cada 15-20 minutos para hidratar.",
-      "Utilizar el grill los últimos minutos para una piel o corteza crujiente."
+      "Colocar una base de verduras de raíz cortadas en láminas finas.",
+      "Marinar la pieza principal con aceite, hierbas y los ajos.",
+      "Hornear regando con el vino cada 15 minutos para que no se seque.",
+      "Usar el grill los últimos minutos para conseguir una costra crujiente."
     ],
     tips: ["Saca la pieza de la nevera una hora antes para que se atempere.", "Deja reposar la carne asada 10 minutos antes de cortarla."]
   },
   reposteria: {
-    ing: ['250g de Harina tamizada', '150g de Azúcar de caña', '3 Huevos camperos', '100g de Mantequilla pomada', '1 Sobre de Impulsor', 'Esencia de vainilla o ralladura de cítricos'],
+    ing: ['250g de Harina tamizada', '150g de Azúcar de caña', '3 Huevos camperos', '100g de Mantequilla en pomada', '1 Sobre de Levadura', 'Esencia de vainilla o ralladura de limón'],
     pasos: [
       "Tamizar los ingredientes secos para evitar grumos y airear la masa.",
-      "Batir los huevos con el azúcar hasta que doblen su volumen.",
-      "Incorporar la materia grasa y los aromas con delicadeza.",
-      "Mezclar con movimientos envolventes para no perder el aire.",
+      "Batir los huevos con el azúcar hasta que doblen su volumen inicial.",
+      "Incorporar la materia grasa y los aromas con mucha delicadeza.",
+      "Mezclar con movimientos envolventes para no perder el aire del batido.",
       "Hornear a temperatura constante hasta que al insertar un palillo salga limpio."
     ],
-    tips: ["La paciencia es el ingrediente secreto: no abras el horno antes de tiempo.", "Usa moldes de calidad para una distribución de calor uniforme."]
+    tips: ["No abras el horno antes de tiempo para que la masa no baje.", "Usa moldes de calidad para que el calor se distribuya uniforme."]
   },
   huevos: {
-    ing: ['4 Huevos de corral', 'Aceite de oliva virgen extra', 'Sal en escamas', 'Pimienta de molinillo', 'Guarnición de temporada (aguacate, setas o ibérico)', 'Tostada de pan artesano'],
+    ing: ['4 Huevos de corral frescos', 'Aceite de oliva vires extra', 'Sal en escamas', 'Pimienta negra de molinillo', 'Guarnición (aguacate o setas)', 'Pan artesano tostado'],
     pasos: [
-      "Calentar el aceite o agua según la técnica elegida (frito, poché o revuelto).",
-      "Cocinar el huevo respetando el tiempo para mantener la yema líquida.",
-      "Preparar la base de pan tostado con un poco de grasa saludable.",
-      "Montar el plato con los complementos calientes o frescos.",
-      "Sazonar justo en el momento de servir."
+      "Calentar el aceite o agua según la técnica elegida (frito o poché).",
+      "Cocinar el huevo respetando el tiempo para que la yema quede líquida.",
+      "Preparar la base de pan tostado con un poco de aceite.",
+      "Montar el plato con los complementos calientes.",
+      "Sazonar con la sal en escamas justo antes de servir."
     ],
-    tips: ["Para un revuelto perfecto, cocina a fuego muy bajo y retira antes de que cuaje del todo.", "Usa huevos a temperatura ambiente para que no se rompa la cadena de calor."]
+    tips: ["Para un revuelto perfecto, cocina a fuego muy bajo y retira antes de que cuaje.", "Usa huevos a temperatura ambiente para un mejor resultado."]
   },
   saludable: {
-    ing: ['250g de Base láctea o vegetal (yogur, kéfir)', 'Granola casera sin azúcar', 'Mix de semillas (chía, sésamo, lino)', 'Frutos rojos frescos', 'Miel de apicultor o sirope de arce'],
+    ing: ['250g de Base láctea (yogur natural o kéfir)', 'Granola casera crujiente', 'Mix de semillas (chía y sésamo)', 'Frutos rojos frescos', 'Miel pura o sirope'],
     pasos: [
-      "Servir la base fría en un bol de cerámica o cristal.",
-      "Disponer la fruta cortada creando un abanico de colores.",
-      "Añadir la granola en una zona lateral para que mantenga el crujiente.",
+      "Servir la base bien fría en un bol de cerámica.",
+      "Disponer la fruta cortada creando un diseño atractivo.",
+      "Añadir la granola en un lateral para que no se ablande.",
       "Espolvorear las semillas por toda la superficie.",
-      "Finalizar con el endulzante natural en forma de hilo fino."
+      "Finalizar con el endulzante natural cayendo en hilo fino."
     ],
-    tips: ["Tuesta las semillas un poco antes para que liberen sus aceites esenciales.", "Cambia la fruta según la estación para variar los nutrientes."]
+    tips: ["Tuesta las semillas un poco antes para potenciar su aroma.", "Cambia la fruta según la estación del año para variar nutrientes."]
   }
 };
 
 const TITULOS_POOL = {
   desayuno: [
     'Huevos Benedictinos', 'Shakshuka con Queso Feta', 'Bol de Açaí y Granola', 'Tostada de Aguacate y Poché',
-    'Tortitas de Avena y Plátano', 'Gofres de Lieja con Frutas', 'Suizo de Almendras', 'Bagel de Salmón y Crema',
+    'Tortitas de Avena y Plátano', 'Gofres de Lieja con Frutas', 'Suizo de Almendras', 'Panecillo de Salmón y Crema',
     'Tortilla de Trufa y Espárragos', 'Gachas de Chía y Mango', 'Tostada Francesa de Brioche', 'Bol de Kéfir y Semillas',
     'Huevos Rotos con Jamón', 'Muesli Suizo Original', 'Batido en Bol de Espirulina', 'Revuelto de Setas Silvestres',
     'Pastel de Espinacas Matinal', 'Burrito de Desayuno Mexicano', 'Crepes de Ricota y Miel', 'Tortitas de Arándanos',
     'Arepa con Perico Gourmet', 'Tostada de Mantequilla de Almendra', 'Chilaquiles Verdes con Huevo', 'Sándwich Croque Madame',
     'Yogur con Granola de Lavanda', 'Tostada de Higo y Requesón', 'Batido de Frutos del Bosque', 'Tarta de Tomate y Albahaca',
     'Huevos al Plato con Chorizo', 'Enrollado de Pavo y Huevo', 'Bol de Quinoa Dulce', 'Tortilla de Patatas Matinal',
-    'Rollitos de Canela Caseros', 'Pudin de Semillas y Coco', 'Gofres de Espelta y Cacao', 'Muffins de Calabacín y Huevo',
+    'Rollitos de Canela Caseros', 'Pudin de Semillas y Coco', 'Gofres de Espelta y Cacao', 'Magdalenas de Calabacín y Huevo',
     'Tostada de Queso de Cabra y Miel', 'Revuelto de Salmón Ahumado', 'Bol de Fruta Tropical', 'Té Matcha con Tostada Zen'
   ],
   aperitivo: [
@@ -131,18 +131,18 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
 
     for (let i = 0; i < totalPorCat; i++) {
       const baseTitle = pool[i % pool.length];
-      const suffix = i >= pool.length ? `(Edición ${Math.floor(i / pool.length) + 1})` : '';
+      const suffix = i >= pool.length ? `(Variación ${Math.floor(i / pool.length) + 1})` : '';
       const title = `${baseTitle} ${suffix}`.trim();
       
       let tecnica = TECNICAS.ensalada;
       const tLow = title.toLowerCase();
       
       if (cat === 'desayuno') {
-        if (tLow.includes('huevo') || tLow.includes('omelette') || tLow.includes('revuelto') || tLow.includes('shakshuka') || tLow.includes('madame')) {
+        if (tLow.includes('huevo') || tLow.includes('revuelto') || tLow.includes('shakshuka')) {
           tecnica = TECNICAS.huevos;
-        } else if (tLow.includes('bol') || tLow.includes('pudin') || tLow.includes('yogur') || tLow.includes('muesli') || tLow.includes('chía')) {
+        } else if (tLow.includes('bol') || tLow.includes('pudin') || tLow.includes('yogur') || tLow.includes('chía')) {
           tecnica = TECNICAS.saludable;
-        } else if (tLow.includes('tortitas') || tLow.includes('gofres') || tLow.includes('crepes') || tLow.includes('suizo') || tLow.includes('rollitos') || tLow.includes('tarta')) {
+        } else if (tLow.includes('tortitas') || tLow.includes('gofres') || tLow.includes('tarta')) {
           tecnica = TECNICAS.reposteria;
         } else {
           tecnica = TECNICAS.huevos;
@@ -150,11 +150,11 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
       } else if (cat === 'postre') {
         tecnica = TECNICAS.reposteria;
       } else {
-        if (tLow.includes('arroz') || tLow.includes('risotto') || tLow.includes('paella')) {
+        if (tLow.includes('arroz') || tLow.includes('paella')) {
           tecnica = TECNICAS.arroz;
-        } else if (tLow.includes('horno') || tLow.includes('asado') || tLow.includes('asada') || tLow.includes('lubina') || tLow.includes('solomillo')) {
+        } else if (tLow.includes('asado') || tLow.includes('horno')) {
           tecnica = TECNICAS.asado;
-        } else if (cat === 'segundo' || tLow.includes('salsa') || tLow.includes('guiso') || tLow.includes('estofado') || tLow.includes('carrilleras')) {
+        } else if (cat === 'segundo' || tLow.includes('guiso')) {
           tecnica = TECNICAS.guiso;
         } else {
           tecnica = TECNICAS.ensalada;
@@ -166,7 +166,7 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
         title,
         category: cat,
         image: `https://picsum.photos/600/400?random=${(cIdx + 1) * 1000 + i}`,
-        description: `Disfruta de la sofisticación de ${title}. Una receta diseñada para resaltar los sabores naturales con técnicas de alta cocina adaptadas al hogar.`,
+        description: `Saborea la excelencia de ${title}. Una preparación artesanal que utiliza ingredientes de proximidad y técnicas refinadas.`,
         ingredients: [...tecnica.ing],
         steps: [...tecnica.pasos],
         tips: [...tecnica.tips],

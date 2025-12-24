@@ -10,53 +10,61 @@ interface UseVoiceAssistantProps {
 }
 
 /**
- * Hook personalizado para manejar el asistente de voz utilizando exclusivamente 
- * las APIs nativas del navegador. Mejorado para evitar solapamientos y mejorar la reconexión.
+ * Motor de voz GourmetVoice optimizado para estabilidad.
+ * Implementa un sistema de autorecuperación y prevención de colisiones.
  */
 export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps) => {
   const [status, setStatus] = useState<VoiceStatus>('idle');
   const recognitionRef = useRef<any>(null);
-  const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis);
   const isSpeakingRef = useRef<boolean>(false);
-  
-  const statusRef = useRef<VoiceStatus>('idle');
-  useEffect(() => {
-    statusRef.current = status;
-  }, [status]);
+  const restartTimerRef = useRef<number | null>(null);
+
+  const stopRecognition = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        // Ignorar si ya está detenido
+      }
+    }
+  };
+
+  const startRecognition = () => {
+    if (enabled && recognitionRef.current && !isSpeakingRef.current) {
+      try {
+        recognitionRef.current.start();
+        setStatus('listening');
+      } catch (e) {
+        // Ignorar si ya está iniciado
+      }
+    }
+  };
 
   const speak = useCallback((text: string) => {
-    if (!enabled || !synthRef.current) return;
+    if (!enabled) return;
 
-    synthRef.current.cancel();
+    const synth = window.speechSynthesis;
+    synth.cancel(); // Detener cualquier habla previa
+    
     isSpeakingRef.current = true;
-
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (e) {}
-    }
-
+    stopRecognition();
     setStatus('speaking');
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-ES';
     utterance.rate = 1.0;
-    utterance.pitch = 1.0;
 
     utterance.onend = () => {
       isSpeakingRef.current = false;
-      setStatus('listening');
-      if (enabled && recognitionRef.current) {
-        try { recognitionRef.current.start(); } catch (e) {}
-      }
+      setTimeout(() => startRecognition(), 200); // Pequeño margen para evitar que escuche su eco
     };
 
     utterance.onerror = () => {
       isSpeakingRef.current = false;
-      setStatus('idle');
-      if (enabled && recognitionRef.current) {
-        try { recognitionRef.current.start(); } catch (e) {}
-      }
+      startRecognition();
     };
 
-    synthRef.current.speak(utterance);
+    synth.speak(utterance);
   }, [enabled]);
 
   useEffect(() => {
@@ -76,19 +84,17 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
       recognition.onresult = (event: any) => {
         const last = event.results.length - 1;
         const command = event.results[last][0].transcript;
-        onCommand(command);
+        if (command) onCommand(command.trim());
       };
 
       recognition.onerror = (event: any) => {
-        if (event.error === 'no-speech') return;
         if (event.error === 'not-allowed') setStatus('error');
+        // El error 'no-speech' es común y lo manejamos con el reinicio automático
       };
 
       recognition.onend = () => {
         if (enabled && !isSpeakingRef.current) {
-          try {
-            recognition.start();
-          } catch (e) {}
+          startRecognition();
         }
       };
 
@@ -96,20 +102,21 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
     }
 
     if (enabled) {
-      try {
-        if (!isSpeakingRef.current) {
-          recognitionRef.current.start();
-          setStatus('listening');
-        }
-      } catch (e) {}
+      startRecognition();
     } else {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
+      stopRecognition();
       setStatus('idle');
     }
 
+    // Sistema de autorecuperación: si debería estar escuchando pero no lo está, forzar reinicio
+    const interval = window.setInterval(() => {
+      if (enabled && !isSpeakingRef.current && status === 'idle') {
+        startRecognition();
+      }
+    }, 2000);
+
     return () => {
+      window.clearInterval(interval);
       if (recognitionRef.current) recognitionRef.current.stop();
     };
   }, [enabled, onCommand]);
