@@ -101,13 +101,23 @@ const TITULOS_POOL = {
     'Tortitas de Avena y Plátano', 'Gofres Belgas con Frutas', 'Bollo Suizo de Almendras', 'Panecillo de Salmón Ahumado',
     'Tortilla de Trufa Negra', 'Gachas de Chía y Mango', 'Tostada Francesa Gourmet', 'Bol de Kéfir y Semillas',
     'Huevos Rotos con Jamón Ibérico', 'Muesli Suizo Original', 'Batido Energético en Bol', 'Revuelto de Setas',
-    'Crepes de Requesón y Miel', 'Arepa Reina Pepiada', 'Sándwich Mixto con Huevo', 'Huevos Rancheros Tradicionales'
+    'Crepes de Requesón y Miel', 'Arepa Reina Pepiada', 'Sándwich Mixto con Huevo', 'Huevos Rancheros Tradicionales',
+    'Pudin de Chía y Coco', 'Smoothie Bowl de Espirulina', 'Tortilla Paisana', 'Bagel de Pavo y Queso Crema',
+    'Tostada de Hummus y Semillas', 'Huevos al Plato con Guisantes', 'Porridge de Avena y Manzana', 'Crepe de Espinacas',
+    'Yogur con Granola Casera', 'Tostada de Sobrasada y Miel', 'Omelette de Queso de Cabra', 'Waffle de Chocolate Negro',
+    'Tarta de Avena al Horno', 'Huevos Turcos (Cilbir)', 'Smoothie Verde Detox', 'Tostada de Ricotta e Higos',
+    'Revuelto de Espárragos Trigueros', 'Bol de Papaya y Lima', 'Pan con Tomate y Cecina', 'Quiche de Desayuno'
   ],
   aperitivo: [
     'Croquetas de Jamón Caseras', 'Gildas de Anchoa y Oliva', 'Patatas Bravas Crujientes', 'Ensaladilla de Ventresca',
     'Boquerones al Vinagre', 'Pimientos de Padrón', 'Tortilla de Patata Melosa', 'Salmorejo Cordobés',
     'Gambas al Ajillo con Guindilla', 'Pulpo a la Gallega', 'Buñuelos de Queso Manchego', 'Montadito de Carne en Salsa',
-    'Mejillones en Escabeche', 'Bombones de Hígado de Pato', 'Crema de Garbanzos con Verduras', 'Tempura de Verduras Finas'
+    'Mejillones en Escabeche', 'Bombones de Hígado de Pato', 'Crema de Garbanzos con Verduras', 'Tempura de Verduras Finas',
+    'Calamares a la Romana', 'Almejas a la Marinera', 'Champiñones al Ajillo', 'Torreznos Crujientes de Soria',
+    'Bombas de Patata y Carne', 'Canapés de Salmón y Eneldo', 'Hummus de Remolacha', 'Brochetas de Cherry y Mozzarella',
+    'Empanadillas de Bonito', 'Tataki de Atún con Sésamo', 'Queso Camembert al Horno', 'Carpaccio de Calabacín',
+    'Nachos Gourmet con Guacamole', 'Rollitos de Primavera Caseros', 'Mini Hamburguesas de Buey', 'Dados de Queso en Aceite',
+    'Ceviche de Corvina', 'Gazpacho de Sandía', 'Piruletas de Parmesano', 'Aceitunas Aliñadas de la Abuela'
   ],
   primero: [
     'Risotto de Setas y Trufa', 'Risotto de Gamba Roja', 'Risotto de Calabaza y Parmesano',
@@ -115,24 +125,36 @@ const TITULOS_POOL = {
     'Risotto Negro con Sepia Fresca', 'Risotto de Setas del Bosque', 'Risotto de Azafrán de la Mancha',
     'Risotto de Verduras de la Huerta', 'Gazpacho de Fresas Maduras', 'Sopa de Cebolla al Estilo Francés', 
     'Lentejas Pardinas con Hígado', 'Arroz a Banda Mediterráneo', 'Pasta al Pesto de Piñones', 
-    'Crema de Calabaza y Jengibre', 'Canelones de Carne Gratinados', 'Sopa de Verduras Italiana'
+    'Crema de Calabaza y Jengibre', 'Canelones de Carne Gratinados', 'Sopa de Verduras Italiana',
+    'Risotto de Pollo y Romero', 'Risotto de Remolacha y Gorgonzola', 'Crema de Espárragos Blancos', 'Vichyssoise Tradicional',
+    'Ensalada César con Pollo Grillé', 'Pasta Carbonara Auténtica', 'Crema de Nécoras', 'Lasaña de Verduras Asadas',
+    'Arroz Negro con Alioli', 'Sopa de Picadillo', 'Ensalada de Quinoa y Mango', 'Pasta Frutti di Mare',
+    'Crema de Champiñones y Tomillo', 'Ensalada de Tomate y Burrata', 'Pasta con Salsa de Trufa', 'Sopa Minestrone Gourmet'
   ],
   segundo: [
     'Cochinillo Asado Crujiente', 'Bacalao al Pil-Pil Tradicional', 'Solomillo al Vino de Oporto', 'Merluza en Salsa Verde',
     'Carrilleras de Cerdo al Vino Tinto', 'Pollo en Salsa de Almendras', 'Lubina a la Sal del Mediterráneo', 'Cordero Lechal al Horno de Leña',
-    'Albóndigas en Salsa Española', 'Rabo de Toro Estofado', 'Entrecot a la Pimienta Verde', 'Atún Rojo con Salsa de Soja'
+    'Albóndigas en Salsa Española', 'Rabo de Toro Estofado', 'Entrecot a la Pimienta Verde', 'Atún Rojo con Salsa de Soja',
+    'Solomillo de Cerdo con Ciruelas', 'Dorada al Horno con Patatas', 'Entrecot con Mantequilla de Hierbas', 'Salmonete a la Plancha',
+    'Estofado de Ternera con Setas', 'Pato a la Naranja', 'Ossobuco a la Milanesa', 'Calamares Rellenos de Carne',
+    'Secreto Ibérico a la Parrilla', 'Bacalao con Tomate y Pimientos', 'Pollo Asado con Hierbas Provenzales', 'Lomo de Salmón Teriyaki',
+    'Codillo de Cerdo Asado', 'Zarzuela de Pescado y Marisco', 'Entrecot de Ternera Gallega', 'Paletilla de Cordero Glaseada'
   ],
   postre: [
     'Arroz con Leche Cremoso', 'Tarta de Queso de la Viña', 'Natillas con Galleta María', 'Torrijas de Pan de Brioche',
     'Flan de Huevo de la Abuela', 'Mousse de Chocolate Negro Puro', 'Tarta de Santiago Tradicional', 'Crema Catalana Tostada',
-    'Bizcocho con Corazón de Chocolate', 'Tarta de Manzana Casera', 'Postre de Café y Mascarpone', 'Crema de Nata y Vainilla'
+    'Bizcocho con Corazón de Chocolate', 'Tarta de Manzana Casera', 'Postre de Café y Mascarpone', 'Crema de Nata y Vainilla',
+    'Brownie de Chocolate y Nueces', 'Copa de Frutos Rojos y Mascarpone', 'Tarta de Limón y Merengue', 'Coulant de Chocolate Belga',
+    'Macedonia de Frutas Tropicales', 'Helado Casero de Pistacho', 'Peras al Vino Tinto', 'Panna Cotta de Vainilla',
+    'Tarta Tatin de Pera', 'Milhojas de Crema y Nata', 'Sorbete de Limón al Cava', 'Trufas de Chocolate Amargo',
+    'Tarta de Zanahoria Gourmet', 'Soufflé de Grand Marnier', 'Cheesecake de Frambuesa', 'Profiteroles de Nata y Chocolate'
   ]
 };
 
 export const RECIPES: Recipe[] = ((): Recipe[] => {
   const todas: Recipe[] = [];
   const cats: Recipe['category'][] = ['desayuno', 'aperitivo', 'primero', 'segundo', 'postre'];
-  const ITEMS_PER_CAT = 200;
+  const ITEMS_PER_CAT = 200; // Garantiza 200 recetas por cada una de las 5 categorías principales
 
   cats.forEach((cat, cIdx) => {
     const pool = TITULOS_POOL[cat];
@@ -146,11 +168,11 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
       const tLow = title.toLowerCase();
       
       if (cat === 'desayuno') {
-        if (tLow.includes('huevo') || tLow.includes('revuelto') || tLow.includes('shakshuka')) {
+        if (tLow.includes('huevo') || tLow.includes('revuelto') || tLow.includes('shakshuka') || tLow.includes('omelette')) {
           tecnica = TECNICAS.huevos;
-        } else if (tLow.includes('bol') || tLow.includes('yogur') || tLow.includes('chía')) {
+        } else if (tLow.includes('bol') || tLow.includes('yogur') || tLow.includes('chía') || tLow.includes('smoothie')) {
           tecnica = TECNICAS.saludable;
-        } else if (tLow.includes('tortitas') || tLow.includes('gofres') || tLow.includes('crepes') || tLow.includes('bollo')) {
+        } else if (tLow.includes('tortitas') || tLow.includes('gofres') || tLow.includes('crepes') || tLow.includes('bollo') || tLow.includes('waffle') || tLow.includes('tarta')) {
           tecnica = TECNICAS.reposteria;
         } else {
           tecnica = TECNICAS.huevos;
@@ -162,9 +184,9 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
           tecnica = TECNICAS.arroz;
         } else if (tLow.includes('asado') || tLow.includes('horno')) {
           tecnica = TECNICAS.asado;
-        } else if (cat === 'segundo' || tLow.includes('guiso') || tLow.includes('carrilleras') || tLow.includes('estofado')) {
+        } else if (cat === 'segundo' || tLow.includes('guiso') || tLow.includes('carrilleras') || tLow.includes('estofado') || tLow.includes('rabo de toro')) {
           tecnica = TECNICAS.guiso;
-        } else if (tLow.includes('ensalada') || tLow.includes('gazpacho')) {
+        } else if (tLow.includes('ensalada') || tLow.includes('gazpacho') || tLow.includes('crema')) {
           tecnica = TECNICAS.ensalada;
         } else {
           tecnica = cat === 'aperitivo' ? TECNICAS.huevos : TECNICAS.ensalada;

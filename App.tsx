@@ -7,55 +7,54 @@ import { LandingPage } from './components/LandingPage.tsx';
 import { useVoiceAssistant } from './hooks/useVoiceAssistant.ts';
 import { VoiceFeedback } from './components/VoiceFeedback.tsx';
 
-// Temas cromáticos ultra-vibrantes por categoría
 export const CATEGORY_THEMES: Record<string, { bg: string, text: string, accent: string, light: string, border: string, header: string }> = {
   desayuno: { 
     header: 'bg-amber-400', 
-    bg: 'bg-amber-50', 
-    text: 'text-amber-900', 
-    accent: 'bg-amber-600', 
-    light: 'bg-amber-200', 
-    border: 'border-amber-400' 
+    bg: 'bg-stone-900', 
+    text: 'text-amber-400', 
+    accent: 'bg-amber-500', 
+    light: 'bg-amber-950', 
+    border: 'border-amber-500/30' 
   },
   aperitivo: { 
     header: 'bg-orange-500', 
-    bg: 'bg-orange-50', 
-    text: 'text-orange-900', 
+    bg: 'bg-stone-900', 
+    text: 'text-orange-400', 
     accent: 'bg-orange-600', 
-    light: 'bg-orange-200', 
-    border: 'border-orange-400' 
+    light: 'bg-orange-950', 
+    border: 'border-orange-500/30' 
   },
   primero: { 
     header: 'bg-emerald-500', 
-    bg: 'bg-emerald-50', 
-    text: 'text-emerald-900', 
+    bg: 'bg-stone-900', 
+    text: 'text-emerald-400', 
     accent: 'bg-emerald-600', 
-    light: 'bg-emerald-200', 
-    border: 'border-emerald-400' 
+    light: 'bg-emerald-950', 
+    border: 'border-emerald-500/30' 
   },
   segundo: { 
     header: 'bg-rose-600', 
-    bg: 'bg-rose-50', 
-    text: 'text-rose-950', 
+    bg: 'bg-stone-900', 
+    text: 'text-rose-400', 
     accent: 'bg-rose-700', 
-    light: 'bg-rose-200', 
-    border: 'border-rose-400' 
+    light: 'bg-rose-950', 
+    border: 'border-rose-500/30' 
   },
   postre: { 
     header: 'bg-fuchsia-600', 
-    bg: 'bg-fuchsia-50', 
-    text: 'text-fuchsia-950', 
+    bg: 'bg-stone-900', 
+    text: 'text-fuchsia-400', 
     accent: 'bg-fuchsia-700', 
-    light: 'bg-fuchsia-200', 
-    border: 'border-fuchsia-400' 
+    light: 'bg-fuchsia-950', 
+    border: 'border-fuchsia-500/30' 
   },
   todos: { 
-    header: 'bg-stone-900', 
-    bg: 'bg-stone-50', 
-    text: 'text-stone-900', 
-    accent: 'bg-stone-900', 
-    light: 'bg-stone-200', 
-    border: 'border-stone-900' 
+    header: 'bg-stone-700', 
+    bg: 'bg-stone-900', 
+    text: 'text-stone-300', 
+    accent: 'bg-stone-100', 
+    light: 'bg-stone-800', 
+    border: 'border-stone-700' 
   }
 };
 
@@ -74,6 +73,19 @@ function App() {
       return JSON.parse(localStorage.getItem('gourmet_favorites') || '[]');
     } catch { return []; }
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const recipeId = params.get('recipeId');
+    if (recipeId) {
+      const recipe = RECIPES.find(r => r.id === parseInt(recipeId));
+      if (recipe) {
+        setSelectedRecipe(recipe);
+        setIsModalOpen(true);
+        setShowLanding(false);
+      }
+    }
+  }, []);
 
   const counts = useMemo(() => {
     const countsMap: Record<string, number> = { todos: RECIPES.length, desayuno: 0, aperitivo: 0, primero: 0, segundo: 0, postre: 0 };
@@ -99,7 +111,9 @@ function App() {
   });
 
   useEffect(() => {
-    if (globalVoiceEnabled && !isModalOpen) speak("Escuchando categoría de cocina.");
+    if (globalVoiceEnabled && !isModalOpen) {
+      speak("Asistente activado. Di una categoría para filtrar tus recetas.");
+    }
   }, [globalVoiceEnabled, isModalOpen, speak]);
 
   const filteredRecipes = useMemo(() => {
@@ -107,11 +121,9 @@ function App() {
       const matchCat = activeCategory === 'todos' || r.category === activeCategory;
       const q = searchQuery.toLowerCase();
       const matchSearch = matchCat && (r.title.toLowerCase().includes(q) || r.ingredients.some(i => i.toLowerCase().includes(q)));
-      
       const recipeTimeVal = parseInt(r.time.split(' ')[0]) || 0;
       const matchTime = maxTime === null || recipeTimeVal <= maxTime;
       const matchDiff = activeDifficulty === null || r.difficulty === activeDifficulty;
-
       return matchSearch && matchTime && matchDiff;
     });
   }, [activeCategory, searchQuery, maxTime, activeDifficulty]);
@@ -119,69 +131,69 @@ function App() {
   if (showLanding) return <LandingPage onEnter={() => setShowLanding(false)} />;
 
   return (
-    <div className="min-h-screen bg-stone-200 pb-20 font-['Lato']">
+    <div className="min-h-screen bg-stone-950 text-stone-100 pb-20 font-['Lato']">
       <VoiceFeedback status={isModalOpen ? 'idle' : status} />
 
-      <header className="sticky top-0 z-40 bg-white border-b-4 border-stone-300 shadow-md">
-        <nav className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center gap-4">
-          <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-             <div className="w-10 h-10 bg-stone-900 rounded-xl flex items-center justify-center text-white font-serif font-black text-lg">G</div>
-             <h1 className="text-xs font-black tracking-tighter hidden xs:block uppercase text-stone-900">GourmetVoice</h1>
+      <header className="sticky top-0 z-40 bg-stone-900 border-b border-stone-800 shadow-2xl">
+        <nav className="max-w-7xl mx-auto px-4 h-14 sm:h-16 flex justify-between items-center gap-3">
+          <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => {
+            window.scrollTo({top: 0, behavior: 'smooth'});
+            window.history.replaceState({}, '', window.location.pathname);
+          }}>
+             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-600 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-serif font-black text-sm sm:text-lg">G</div>
+             <h1 className="text-[10px] font-black tracking-tighter hidden xs:block uppercase text-white">GourmetVoice</h1>
           </div>
           
           <div className="flex-1 max-w-xl relative">
             <input 
               type="text" 
-              placeholder="¿Qué vas a cocinar hoy?" 
+              placeholder="Busca ingredientes o platos..." 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className="w-full pl-4 pr-12 py-3 bg-stone-100 rounded-2xl border-none outline-none text-[14px] font-black focus:ring-4 focus:ring-stone-400 transition-all placeholder:text-stone-400" 
+              className="w-full pl-3 pr-10 py-2 sm:py-3 bg-stone-800 rounded-xl sm:rounded-2xl border-none outline-none text-[12px] sm:text-[14px] font-black focus:ring-4 focus:ring-amber-600/30 transition-all placeholder:text-stone-500 text-white" 
             />
             <button 
               onClick={() => setGlobalVoiceEnabled(!globalVoiceEnabled)} 
-              className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all shadow-sm ${globalVoiceEnabled ? 'bg-amber-500 text-white animate-pulse' : 'bg-stone-300 text-stone-500'}`}
-              title="Activar Voz"
+              className={`absolute right-1 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all shadow-sm ${globalVoiceEnabled ? 'bg-amber-500 text-white animate-pulse' : 'bg-stone-700 text-stone-400 hover:bg-stone-600'}`}
+              title="Asistente de Voz"
             >
-              <span className="text-lg">🎤</span>
+              <span className="text-sm sm:text-lg">🎤</span>
             </button>
           </div>
         </nav>
 
-        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-3">
-          {/* Fila de Categorías */}
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+        <div className="max-w-7xl mx-auto px-3 py-2 sm:py-3 flex flex-col gap-2 sm:gap-3 overflow-hidden">
+          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1">
             {['todos', 'desayuno', 'aperitivo', 'primero', 'segundo', 'postre'].map(cat => {
               const theme = CATEGORY_THEMES[cat] || CATEGORY_THEMES.todos;
               return (
                 <button 
                   key={cat} 
                   onClick={() => setActiveCategory(cat)} 
-                  className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all shrink-0 flex items-center gap-3 border-3 ${
-                    activeCategory === cat ? `${theme.header} border-stone-900 text-stone-950 shadow-xl scale-105` : 'bg-white text-stone-400 border-stone-100 hover:border-stone-300'
+                  className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all shrink-0 flex items-center gap-2 sm:gap-3 border-2 ${
+                    activeCategory === cat ? `${theme.header} border-white text-stone-950 shadow-lg scale-105` : 'bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-500'
                   }`}
                 >
-                  {cat} <span className="opacity-50 text-[9px] font-bold">{counts[cat]}</span>
+                  {cat} <span className="opacity-40 text-[8px] sm:text-[9px] font-bold">{counts[cat]}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Fila de Filtros Adicionales (Tiempo y Dificultad) */}
-          <div className="flex flex-wrap gap-4 items-center">
-            {/* Filtro Tiempo */}
-            <div className="flex gap-2 items-center bg-stone-100 p-1 rounded-2xl border border-stone-200">
-              <span className="text-[9px] font-black uppercase text-stone-400 px-3 tracking-widest">Tiempo:</span>
+          <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
+            <div className="flex gap-1.5 items-center bg-stone-900 p-1 rounded-xl border border-stone-800">
+              <span className="text-[8px] sm:text-[9px] font-black uppercase text-stone-500 px-1 sm:px-2 tracking-widest">⏳</span>
               {[
-                { label: 'Todos', val: null },
-                { label: '< 15 min', val: 15 },
-                { label: '< 30 min', val: 30 },
-                { label: '< 60 min', val: 60 }
+                { label: 'T', val: null },
+                { label: '15', val: 15 },
+                { label: '30', val: 30 },
+                { label: '60', val: 60 }
               ].map(t => (
                 <button
                   key={t.label}
                   onClick={() => setMaxTime(t.val)}
-                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all ${
-                    maxTime === t.val ? 'bg-stone-900 text-white shadow-md' : 'text-stone-500 hover:bg-stone-200'
+                  className={`w-7 h-7 sm:w-auto sm:px-4 sm:py-1.5 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black uppercase transition-all flex items-center justify-center ${
+                    maxTime === t.val ? 'bg-stone-100 text-stone-950' : 'text-stone-500 hover:bg-stone-800'
                   }`}
                 >
                   {t.label}
@@ -189,75 +201,69 @@ function App() {
               ))}
             </div>
 
-            {/* Filtro Dificultad */}
-            <div className="flex gap-2 items-center bg-stone-100 p-1 rounded-2xl border border-stone-200">
-              <span className="text-[9px] font-black uppercase text-stone-400 px-3 tracking-widest">Dificultad:</span>
+            <div className="flex gap-1.5 items-center bg-stone-900 p-1 rounded-xl border border-stone-800">
+              <span className="text-[8px] sm:text-[9px] font-black uppercase text-stone-500 px-1 sm:px-2 tracking-widest">🔥</span>
               {[
-                { label: 'Todos', val: null },
-                { label: 'Fácil', val: 'Baja' },
-                { label: 'Media', val: 'Media' },
-                { label: 'Alta', val: 'Alta' }
+                { label: 'T', val: null },
+                { label: 'F', val: 'Baja' },
+                { label: 'M', val: 'Media' },
+                { label: 'A', val: 'Alta' }
               ].map(d => (
                 <button
                   key={d.label}
                   onClick={() => setActiveDifficulty(d.val)}
-                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all ${
-                    activeDifficulty === d.val ? 'bg-stone-900 text-white shadow-md' : 'text-stone-500 hover:bg-stone-200'
+                  className={`w-7 h-7 sm:w-auto sm:px-4 sm:py-1.5 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black uppercase transition-all flex items-center justify-center ${
+                    activeDifficulty === d.val ? 'bg-stone-100 text-stone-950' : 'text-stone-500 hover:bg-stone-800'
                   }`}
                 >
                   {d.label}
                 </button>
               ))}
             </div>
-
-            {/* Contador de resultados */}
-            <div className="ml-auto text-[10px] font-black text-stone-400 uppercase tracking-widest bg-white px-4 py-2 rounded-xl border border-stone-100">
-              Mostrando <span className="text-stone-900">{filteredRecipes.length}</span> recetas
-            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {filteredRecipes.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
             {filteredRecipes.map((recipe) => {
               const theme = CATEGORY_THEMES[recipe.category] || CATEGORY_THEMES.todos;
               return (
                 <article 
                   key={recipe.id} 
                   onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }}
-                  className={`group relative bg-white rounded-[2rem] border-4 ${theme.border} overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer flex flex-col h-full active:scale-95`}
+                  className="group relative bg-stone-900 rounded-[1.25rem] sm:rounded-[1.5rem] border border-stone-800 overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-all duration-300 cursor-pointer flex flex-col h-full active:scale-95"
                 >
-                  <div className={`relative h-32 sm:h-48 flex items-center justify-center px-4 transition-all ${theme.header}`}>
-                    <h3 className="font-sans font-black text-[14px] sm:text-[20px] leading-tight tracking-tighter text-stone-950 text-center line-clamp-3 uppercase drop-shadow-sm">
+                  <div className={`relative h-28 sm:h-36 flex items-center justify-center px-3 sm:px-4 transition-all ${theme.header}`}>
+                    <h3 className="font-sans font-black text-[12px] md:text-[14px] leading-tight tracking-tight text-stone-950 text-center line-clamp-2 uppercase drop-shadow-sm">
                       {recipe.title}
                     </h3>
-                    <div className="absolute top-3 right-3 w-8 h-8 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center text-stone-950 border-2 border-white/30 shadow-sm">
+                    <div className="absolute top-2 right-2 w-6 h-6 sm:w-8 sm:h-8 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-stone-950 border border-white/10 text-[10px] sm:text-sm">
                       {favorites.includes(recipe.id) ? '★' : '☆'}
                     </div>
                   </div>
 
-                  <div className="p-4 sm:p-6 flex-1 flex flex-col">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className={`px-3 py-1 rounded-xl text-[9px] sm:text-[11px] font-black uppercase tracking-widest ${theme.light} ${theme.text} border border-black/5`}>
+                  <div className="p-3 sm:p-4 flex-1 flex flex-col">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className={`px-2 py-0.5 rounded-lg text-[8px] sm:text-[10px] font-black uppercase tracking-wider ${theme.light} ${theme.text}`}>
                         {recipe.category}
                       </span>
-                      <span className="text-[9px] sm:text-[11px] font-black text-stone-500">{recipe.time}</span>
+                      <span className="text-[8px] sm:text-[10px] font-black text-stone-500">{recipe.time}</span>
                     </div>
                     
-                    <p className="text-stone-600 text-[11px] sm:text-[15px] line-clamp-3 italic opacity-90 leading-tight mb-5 font-bold font-['Lato']">
+                    <p className="text-stone-400 text-[10px] sm:text-[12px] line-clamp-2 italic leading-tight mb-3 font-bold">
                       {recipe.description}
                     </p>
 
-                    <div className="mt-auto pt-4 border-t-2 border-stone-100 flex justify-between items-center">
-                       <div className="flex gap-2">
+                    <div className="mt-auto pt-2 border-t border-stone-800 flex justify-between items-center">
+                       <div className="flex gap-1">
                           {[1, 2, 3].map(i => (
-                            <div key={i} className={`w-2.5 h-2.5 rounded-full ${i <= (recipe.difficulty === 'Baja' ? 1 : recipe.difficulty === 'Media' ? 2 : 3) ? theme.accent : 'bg-stone-200'}`}></div>
+                            <div key={i} className={`w-1.5 h-1.5 rounded-full ${i <= (recipe.difficulty === 'Baja' ? 1 : recipe.difficulty === 'Media' ? 2 : 3) ? theme.accent : 'bg-stone-800'}`}></div>
                           ))}
                        </div>
-                       <span className={`px-5 py-2.5 rounded-2xl text-[10px] sm:text-[13px] font-black uppercase tracking-[0.2em] ${theme.accent} text-white shadow-xl group-hover:scale-110 transition-transform`}>
-                         COCINAR
+                       <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider ${theme.accent} text-white shadow-md`}>
+                         VER
                        </span>
                     </div>
                   </div>
@@ -266,15 +272,14 @@ function App() {
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="text-6xl mb-6">🍳</div>
-            <h2 className="text-2xl font-black text-stone-900 uppercase tracking-tighter mb-2">No hay recetas que coincidan</h2>
-            <p className="text-stone-500 font-bold max-w-xs mx-auto">Prueba ajustando los filtros de tiempo o dificultad.</p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="text-4xl mb-4">🥘</div>
+            <h2 className="text-lg font-black text-white uppercase tracking-tighter mb-1">Sin resultados</h2>
             <button 
               onClick={() => { setMaxTime(null); setActiveDifficulty(null); setActiveCategory('todos'); setSearchQuery(''); }}
-              className="mt-8 px-8 py-3 bg-stone-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl active:scale-95"
+              className="mt-4 px-6 py-2 bg-stone-100 text-stone-950 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl"
             >
-              Limpiar todos los filtros
+              Limpiar filtros
             </button>
           </div>
         )}

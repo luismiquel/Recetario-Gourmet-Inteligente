@@ -25,7 +25,7 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
         setStatus('listening');
       }
     } catch (e) {
-      // Reconocimiento ya activo, ignorar error 
+      // Ignorar si ya está corriendo
     }
   }, [enabled]);
 
@@ -46,7 +46,7 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
     if (!enabled) return;
 
     const synth = window.speechSynthesis;
-    synth.cancel(); // Detener cualquier habla previa
+    synth.cancel(); // Desbloquear sistema
     
     isSpeakingRef.current = true;
     stopRecognition();
@@ -59,10 +59,10 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
 
     utterance.onend = () => {
       isSpeakingRef.current = false;
-      // Pequeño delay para no escucharse a sí mismo por el altavoz
+      // Delay preventivo para evitar bucles de eco
       restartTimeoutRef.current = window.setTimeout(() => {
         if (!manuallyStopped.current) startRecognition();
-      }, 700);
+      }, 800);
     };
 
     utterance.onerror = () => {
@@ -91,23 +91,22 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
         const lastResultIndex = event.results.length - 1;
         const command = event.results[lastResultIndex][0].transcript;
         if (command) {
+          setStatus('processing');
           onCommand(command.trim());
         }
       };
 
       recognition.onend = () => {
-        // Reinicio persistente si el navegador lo corta por silencio
         if (enabled && !isSpeakingRef.current && !manuallyStopped.current) {
-          restartTimeoutRef.current = window.setTimeout(startRecognition, 150);
+          restartTimeoutRef.current = window.setTimeout(startRecognition, 200);
         }
       };
 
       recognition.onerror = (event: any) => {
-        if (event.error === 'aborted') return;
-        if (event.error === 'no-speech') return;
-        console.error('Reconocimiento error:', event.error);
-        
-        // Intentar recuperar tras error
+        if (event.error === 'aborted' || event.error === 'no-speech') {
+          return;
+        }
+        console.warn('Voz Error:', event.error);
         if (enabled && !manuallyStopped.current) {
           setTimeout(startRecognition, 1000);
         }
