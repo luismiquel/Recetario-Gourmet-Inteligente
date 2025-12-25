@@ -11,7 +11,9 @@ const TECNICAS = {
       "Cocer a fuego medio durante 18 minutos exactos.",
       "Mantecar al final con mantequilla y parmesano para la cremosidad definitiva."
     ],
-    tips: ["Remover el risotto libera el almidón, clave para la textura melosa.", "El caldo siempre debe estar hirviendo al añadirlo."]
+    tips: ["Remover el risotto libera el almidón, clave para la textura melosa.", "El caldo siempre debe estar hirviendo al añadirlo."],
+    baseTime: 45,
+    baseDiff: 'Media'
   },
   guiso: {
     ing: ['500g de Proteína seleccionada', '2 Patatas medianas de calidad', '2 Zanahorias frescas', '1 Cebolla blanca picada', '200ml de Vino de cocina', '1 Hoja de laurel seco', 'Sal fina y Pimentón de la Vera'],
@@ -22,7 +24,9 @@ const TECNICAS = {
       "Cubrir con caldo y cocinar a fuego suave.",
       "Añadir las patatas al final para trabar la salsa."
     ],
-    tips: ["La paciencia es el ingrediente principal de un buen guiso.", "Prepáralo el día anterior para que los sabores asienten."]
+    tips: ["La paciencia es el ingrediente principal de un buen guiso.", "Prepáralo el día anterior para que los sabores asienten."],
+    baseTime: 90,
+    baseDiff: 'Alta'
   },
   ensalada: {
     ing: ['200g de Hojas verdes frescas', 'Fruta de temporada madura', 'Aceite de oliva virgen extra', 'Vinagre de Jerez o Módena', 'Frutos secos tostados'],
@@ -33,7 +37,9 @@ const TECNICAS = {
       "Mezclar con delicadeza para no castigar el vegetal.",
       "Aliñar justo antes de servir para mantener el crujiente."
     ],
-    tips: ["Usa sal en escamas para un toque profesional.", "Añade hierbas frescas como albahaca o menta para refrescar."]
+    tips: ["Usa sal en escamas para un toque profesional.", "Añade hierbas frescas como albahaca o menta para refrescar."],
+    baseTime: 15,
+    baseDiff: 'Baja'
   },
   asado: {
     ing: ['Pieza principal (Carne o Pescado)', 'Patatas de guarnición panadera', 'Dientes de ajo machacados', 'Hierbas aromáticas frescas', 'Vino blanco seco de mesa'],
@@ -44,7 +50,9 @@ const TECNICAS = {
       "Hornear regando con sus propios jugos cada 15 min.",
       "Dar un golpe de grill final para el dorado perfecto."
     ],
-    tips: ["No pinches la carne para que no pierda sus jugos.", "Usa una sonda térmica si quieres el punto exacto."]
+    tips: ["No pinches la carne para que no pierda sus jugos.", "Usa una sonda térmica si quieres el punto exacto."],
+    baseTime: 60,
+    baseDiff: 'Media'
   },
   reposteria: {
     ing: ['250g de Harina de repostería', '150g de Azúcar blanco', '3 Huevos camperos', '100g de Mantequilla sin sal', 'Levadura química en polvo', 'Extracto de vainilla natural'],
@@ -55,7 +63,9 @@ const TECNICAS = {
       "Incorporar la harina con movimientos envolventes.",
       "Hornear sin abrir la puerta hasta el final del proceso."
     ],
-    tips: ["Todos los ingredientes deben estar a temperatura ambiente.", "Engrasa bien el molde con mantequilla y harina."]
+    tips: ["Todos los ingredientes deben estar a temperatura ambiente.", "Engrasa bien el molde con mantequilla y harina."],
+    baseTime: 75,
+    baseDiff: 'Alta'
   },
   huevos: {
     ing: ['4 Huevos frescos de granja', 'Aceite de oliva virgen', 'Sal fina marina', 'Pimienta negra molida', 'Guarnición vegetal variada', 'Tostadas de pan de masa madre'],
@@ -66,7 +76,9 @@ const TECNICAS = {
       "Montar sobre el pan tostado.",
       "Añadir el toque final de pimienta recién molida."
     ],
-    tips: ["Usa huevos muy frescos para que la clara no se disperse.", "Para el revuelto, retira del fuego un poco antes de que parezca listo."]
+    tips: ["Usa huevos muy frescos para que la clara no se disperse.", "Para el revuelto, retira del fuego un poco antes de que parezca listo."],
+    baseTime: 10,
+    baseDiff: 'Baja'
   },
   saludable: {
     ing: ['250g de Base láctea o yogur griego', 'Semillas y cereales integrales', 'Frutos del bosque frescos', 'Miel o edulcorante natural'],
@@ -77,7 +89,9 @@ const TECNICAS = {
       "Finalizar con un hilo de miel o sirope.",
       "Servir inmediatamente para disfrutar las texturas."
     ],
-    tips: ["Tuesta la granola tú mismo para controlar el azúcar.", "Usa frutas de colores variados para más antioxidantes."]
+    tips: ["Tuesta la granola tú mismo para controlar el azúcar.", "Usa frutas de colores variados para más antioxidantes."],
+    baseTime: 12,
+    baseDiff: 'Baja'
   }
 };
 
@@ -136,7 +150,7 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
           tecnica = TECNICAS.huevos;
         } else if (tLow.includes('bol') || tLow.includes('yogur') || tLow.includes('chía')) {
           tecnica = TECNICAS.saludable;
-        } else if (tLow.includes('tortitas') || tLow.includes('gofres') || tLow.includes('crepes')) {
+        } else if (tLow.includes('tortitas') || tLow.includes('gofres') || tLow.includes('crepes') || tLow.includes('bollo')) {
           tecnica = TECNICAS.reposteria;
         } else {
           tecnica = TECNICAS.huevos;
@@ -148,10 +162,12 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
           tecnica = TECNICAS.arroz;
         } else if (tLow.includes('asado') || tLow.includes('horno')) {
           tecnica = TECNICAS.asado;
-        } else if (cat === 'segundo' || tLow.includes('guiso') || tLow.includes('carrilleras')) {
+        } else if (cat === 'segundo' || tLow.includes('guiso') || tLow.includes('carrilleras') || tLow.includes('estofado')) {
           tecnica = TECNICAS.guiso;
-        } else {
+        } else if (tLow.includes('ensalada') || tLow.includes('gazpacho')) {
           tecnica = TECNICAS.ensalada;
+        } else {
+          tecnica = cat === 'aperitivo' ? TECNICAS.huevos : TECNICAS.ensalada;
         }
       }
 
@@ -164,8 +180,8 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
         ingredients: [...tecnica.ing],
         steps: [...tecnica.pasos],
         tips: [...tecnica.tips],
-        time: i % 3 === 0 ? '20 min' : i % 2 === 0 ? '50 min' : '35 min',
-        difficulty: i % 5 === 0 ? 'Alta' : i % 3 === 0 ? 'Media' : 'Baja'
+        time: `${tecnica.baseTime + (i % 10)} min`,
+        difficulty: tecnica.baseDiff as any
       });
     }
   });
