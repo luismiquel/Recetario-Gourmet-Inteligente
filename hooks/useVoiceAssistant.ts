@@ -25,7 +25,7 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
         setStatus('listening');
       }
     } catch (e) {
-      // Ignorar si ya está corriendo
+      // Ignorar errores si ya está activo
     }
   }, [enabled]);
 
@@ -46,7 +46,7 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
     if (!enabled) return;
 
     const synth = window.speechSynthesis;
-    synth.cancel(); // Desbloquear sistema
+    synth.cancel(); // Limpiar cola anterior
     
     isSpeakingRef.current = true;
     stopRecognition();
@@ -59,10 +59,10 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
 
     utterance.onend = () => {
       isSpeakingRef.current = false;
-      // Delay preventivo para evitar bucles de eco
+      // Pequeño delay para que el micro no capte el eco residual del altavoz
       restartTimeoutRef.current = window.setTimeout(() => {
         if (!manuallyStopped.current) startRecognition();
-      }, 800);
+      }, 600);
     };
 
     utterance.onerror = () => {
@@ -103,10 +103,8 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
       };
 
       recognition.onerror = (event: any) => {
-        if (event.error === 'aborted' || event.error === 'no-speech') {
-          return;
-        }
-        console.warn('Voz Error:', event.error);
+        if (event.error === 'aborted' || event.error === 'no-speech') return;
+        console.warn('Voz API Error:', event.error);
         if (enabled && !manuallyStopped.current) {
           setTimeout(startRecognition, 1000);
         }
