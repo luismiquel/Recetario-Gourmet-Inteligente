@@ -3,15 +3,15 @@ import { Recipe } from './types.ts';
 
 const TECNICAS = {
   arroz: {
-    ing: ['250g de Arroz Bomba', '750ml de Caldo de ave casero', '2 hebras de Azafrán puro', '1 Pimiento rojo', '100g de Judía verde plana', '1 Tomate maduro rallado', 'Aceite de Oliva Virgen Extra'],
+    ing: ['250g de Arroz Bomba o Carnaroli', '750ml de Caldo de ave o verduras casero', '2 hebras de Azafrán puro', '1 Pimiento rojo', '100g de Judía verde plana', '1 Tomate maduro rallado', 'Queso Parmesano (para risottos)', 'Mantequilla fría (para risottos)', 'Aceite de Oliva Virgen Extra'],
     pasos: [
-      "Sofreír el pimiento y las verduras en aceite de oliva hasta que doren ligeramente.",
-      "Añadir el tomate rallado y cocinar hasta que pierda todo el agua.",
-      "Incorporar el arroz y nacarar durante 2 minutos para sellar bien el grano.",
-      "Verter el caldo caliente con el azafrán y cocer 18 minutos sin remover.",
-      "Dejar reposar 5 minutos con un paño limpio antes de servir."
+      "Sofreír los vegetales base en aceite de oliva o mantequilla hasta que doren ligeramente.",
+      "Añadir el arroz y nacarar durante 2 minutos para sellar bien el grano y que suelte el almidón gradualmente.",
+      "Si es risotto, añadir el caldo cazo a cazo removiendo constantemente para crear la cremosidad.",
+      "Si es arroz seco, verter todo el caldo caliente de una vez y cocer 18 minutos sin remover.",
+      "Mantecar al final con mantequilla y parmesano si es técnica de risotto o dejar reposar 5 minutos si es paella."
     ],
-    tips: ["El secreto es un sofrito lento y con mucha paciencia.", "Utiliza un recipiente de base ancha para que el arroz no se apile."]
+    tips: ["El secreto es el movimiento constante para el risotto y el reposo absoluto para el arroz seco.", "Utiliza un caldo de alta calidad, es el alma del plato."]
   },
   guiso: {
     ing: ['500g de Carne de ternera o ave', '2 Patatas medianas', '2 Zanahorias', '1 Cebolla blanca picada', '200ml de Vino tinto o blanco', '1 Hoja de laurel', 'Pimentón de la Vera'],
@@ -89,35 +89,30 @@ const TITULOS_POOL = {
     'Huevos Rotos con Jamón', 'Muesli Suizo Original', 'Batido en Bol de Espirulina', 'Revuelto de Setas Silvestres',
     'Pastel de Espinacas Matinal', 'Burrito de Desayuno Mexicano', 'Crepes de Ricota y Miel', 'Tortitas de Arándanos',
     'Arepa con Perico Gourmet', 'Tostada de Mantequilla de Almendra', 'Chilaquiles Verdes con Huevo', 'Sándwich Croque Madame',
-    'Yogur con Granola de Lavanda', 'Tostada de Higo y Requesón', 'Batido de Frutos del Bosque', 'Tarta de Tomate y Albahaca',
-    'Huevos al Plato con Chorizo', 'Enrollado de Pavo y Huevo', 'Bol de Quinoa Dulce', 'Tortilla de Patatas Matinal',
-    'Rollitos de Canela Caseros', 'Pudin de Semillas y Coco', 'Gofres de Espelta y Cacao', 'Magdalenas de Calabacín y Huevo',
-    'Tostada de Queso de Cabra y Miel', 'Revuelto de Salmón Ahumado', 'Bol de Fruta Tropical', 'Té Matcha con Tostada Zen'
+    'Huevos Rancheros Tradicionales', 'Tostada de Hummus y Huevo', 'Gofres de Avena y Arándanos'
   ],
   aperitivo: [
     'Croquetas de Jamón Ibérico', 'Gildas de Anchoa y Oliva', 'Patatas Bravas Gourmet', 'Ensaladilla de Ventresca',
     'Boquerones en Vinagre Real', 'Pimientos Rellenos de Bacalao', 'Tortilla de Patata Trufada', 'Salmorejo Cordobés',
     'Gambas al Ajillo con Guindilla', 'Pulpo a la Gallega Tradicional', 'Buñuelos de Queso Mahón', 'Montadito de Pringá',
-    'Champiñones Rellenos de Jamón', 'Mejillones en Escabeche', 'Bombones de Queso y Nueces', 'Crujiente de Berenjena',
-    'Aceitunas Aliñadas de la Casa', 'Tabla de Quesos Artesanos', 'Hummus de Garbanzo y Sésamo', 'Brocheta de Tomatitos y Mozzarella'
+    'Champiñones Rellenos de Jamón', 'Mejillones en Escabeche', 'Bombones de Queso y Nueces', 'Crujiente de Berenjena'
   ],
   primero: [
-    'Gazpacho de Fresas y Tomate', 'Sopa de Cebolla Gratinada', 'Lentejas con Foie', 'Arroz a Banda del Delta',
-    'Pasta al Pesto Genovés', 'Crema de Calabaza y Jengibre', 'Canelones de Asado', 'Ensalada César con Pollo Campero',
-    'Arroz Meloso de Setas', 'Crema de Puerro Joven', 'Ensalada de Quinoa y Granada', 'Pasta Carbonara Original',
-    'Sopa de Pescado de Roca', 'Lasaña de Verduras de la Huerta', 'Sopa de Verduras de Estación', 'Crema de Marisco Real'
+    'Risotto de Setas Silvestres y Trufa', 'Risotto de Gambas y Espárragos', 'Risotto de Calabaza y Salvia',
+    'Risotto al Funghi Porcini', 'Risotto de Espinacas y Gorgonzola', 'Risotto de Pera y Nueces',
+    'Risotto Negro con Chipirones', 'Gazpacho de Fresas y Tomate', 'Sopa de Cebolla Gratinada', 
+    'Lentejas con Foie', 'Arroz a Banda del Delta', 'Pasta al Pesto Genovés', 'Crema de Calabaza y Jengibre', 
+    'Canelones de Asado', 'Arroz Meloso de Marisco', 'Sopa Minestrone Gourmet'
   ],
   segundo: [
     'Cochinillo Asado a Fuego Lento', 'Bacalao al Pil-Pil Esmeralda', 'Solomillo de Ternera al Oporto', 'Merluza en Salsa Verde',
     'Carrilleras de Cerdo al Vino Tinto', 'Pollo de Corral en Pepitoria', 'Lubina a la Sal de Manantial', 'Cordero Lechal al Horno',
-    'Albóndigas con Salsa de Almendra', 'Rabo de Toro Estofado', 'Entrecot a la Pimienta Verde', 'Atún Rojo con Sésamo',
-    'Pato a la Naranja Amarga', 'Estofado de Venado y Setas', 'Lubina con Costra de Hierbas', 'Salmonetes con Escamas de Patata'
+    'Albóndigas con Salsa de Almendra', 'Rabo de Toro Estofado', 'Entrecot a la Pimienta Verde', 'Atún Rojo con Sésamo'
   ],
   postre: [
     'Arroz con Leche y Caramelo', 'Tarta de Queso Fluida', 'Natillas de la Abuela', 'Torrijas de Brioche',
     'Flan de Huevo y Vainilla', 'Mousse de Chocolate al 70%', 'Tarta de Santiago Original', 'Crema Catalana Quemada',
-    'Bizcocho de Nueces Macadamia', 'Volcán de Chocolate Negro', 'Sorbete de Limón y Cava', 'Tarta de Manzana Reineta',
-    'Milhojas de Crema y Nata', 'Postre de Frutos Rojos', 'Tocino de Cielo de Jerez', 'Peras al Vino con Canela'
+    'Coulant de Chocolate Belga', 'Tarta de Manzana Casera', 'Tiramisú Tradicional'
   ]
 };
 
@@ -127,11 +122,11 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
   
   cats.forEach((cat, cIdx) => {
     const pool = TITULOS_POOL[cat];
-    const totalPorCat = 200;
+    const totalPorCat = 200; // Total por categoría
 
     for (let i = 0; i < totalPorCat; i++) {
       const baseTitle = pool[i % pool.length];
-      const suffix = i >= pool.length ? `(Variación ${Math.floor(i / pool.length) + 1})` : '';
+      const suffix = i >= pool.length ? `(Edición ${Math.floor(i / pool.length) + 1})` : '';
       const title = `${baseTitle} ${suffix}`.trim();
       
       let tecnica = TECNICAS.ensalada;
@@ -142,7 +137,7 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
           tecnica = TECNICAS.huevos;
         } else if (tLow.includes('bol') || tLow.includes('pudin') || tLow.includes('yogur') || tLow.includes('chía')) {
           tecnica = TECNICAS.saludable;
-        } else if (tLow.includes('tortitas') || tLow.includes('gofres') || tLow.includes('tarta')) {
+        } else if (tLow.includes('tortitas') || tLow.includes('gofres') || tLow.includes('tarta') || tLow.includes('suizo')) {
           tecnica = TECNICAS.reposteria;
         } else {
           tecnica = TECNICAS.huevos;
@@ -150,11 +145,12 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
       } else if (cat === 'postre') {
         tecnica = TECNICAS.reposteria;
       } else {
-        if (tLow.includes('arroz') || tLow.includes('paella')) {
+        // Lógica mejorada para detectar Risottos y arroces
+        if (tLow.includes('arroz') || tLow.includes('paella') || tLow.includes('risotto')) {
           tecnica = TECNICAS.arroz;
         } else if (tLow.includes('asado') || tLow.includes('horno')) {
           tecnica = TECNICAS.asado;
-        } else if (cat === 'segundo' || tLow.includes('guiso')) {
+        } else if (cat === 'segundo' || tLow.includes('guiso') || tLow.includes('carrilleras')) {
           tecnica = TECNICAS.guiso;
         } else {
           tecnica = TECNICAS.ensalada;
@@ -166,7 +162,7 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
         title,
         category: cat,
         image: `https://picsum.photos/600/400?random=${(cIdx + 1) * 1000 + i}`,
-        description: `Saborea la excelencia de ${title}. Una preparación artesanal que utiliza ingredientes de proximidad y técnicas refinadas.`,
+        description: `Saborea la excelencia de ${title}. Una preparación artesanal que utiliza ingredientes de proximidad y técnicas refinadas de cocina local.`,
         ingredients: [...tecnica.ing],
         steps: [...tecnica.pasos],
         tips: [...tecnica.tips],

@@ -39,6 +39,24 @@ function App() {
     } catch { return []; }
   });
 
+  // Calculamos los contadores por categoría de forma eficiente
+  const counts = useMemo(() => {
+    const countsMap: Record<string, number> = {
+      todos: RECIPES.length,
+      desayuno: 0,
+      aperitivo: 0,
+      primero: 0,
+      segundo: 0,
+      postre: 0
+    };
+    RECIPES.forEach(r => {
+      if (countsMap[r.category] !== undefined) {
+        countsMap[r.category]++;
+      }
+    });
+    return countsMap;
+  }, []);
+
   const handleGlobalCommand = useCallback((cmd: string) => {
     const c = cmd.toLowerCase();
     
@@ -117,13 +135,16 @@ function App() {
         <nav className="max-w-7xl mx-auto px-4 h-14 sm:h-16 flex justify-between items-center gap-2">
           <div className="flex items-center gap-2 shrink-0 cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-stone-900 rounded-lg flex items-center justify-center text-[10px] sm:text-sm text-white font-serif font-black">G</div>
-             <h1 className="text-xs sm:text-sm font-serif font-black tracking-tight hidden xs:block">Gourmet</h1>
+             <div className="flex flex-col leading-tight">
+               <h1 className="text-xs sm:text-sm font-serif font-black tracking-tight hidden xs:block">Gourmet</h1>
+               <span className="text-[8px] font-black text-amber-600 hidden xs:block">{RECIPES.length} PLATOS</span>
+             </div>
           </div>
           
           <div className="flex-1 max-w-lg relative">
             <input 
               type="text" 
-              placeholder="Buscar..." 
+              placeholder="¿Qué quieres cocinar?" 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
               className="w-full pl-8 pr-8 py-1.5 bg-stone-100 rounded-xl border-none focus:bg-white focus:ring-1 focus:ring-stone-200 transition-all outline-none text-[13px] font-bold" 
@@ -147,11 +168,14 @@ function App() {
               <button 
                 key={cat} 
                 onClick={() => setActiveCategory(cat)} 
-                className={`px-2.5 py-1 rounded-md text-[7px] font-black uppercase tracking-wider transition-all border shrink-0 ${
+                className={`px-3 py-1.5 rounded-md text-[8px] font-black uppercase tracking-wider transition-all border shrink-0 flex items-center gap-2 ${
                   isActive ? `bg-stone-900 border-transparent text-white` : `bg-white text-stone-400 border-stone-100`
                 }`}
               >
                 {cat}
+                <span className={`px-1.5 py-0.5 rounded-full text-[7px] ${isActive ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-400'}`}>
+                  {counts[cat]}
+                </span>
               </button>
             );
           })}
@@ -159,7 +183,6 @@ function App() {
       </header>
 
       <main className="max-w-7xl mx-auto px-2 py-3">
-        {/* Diseño: 2 columnas en móvil, 3 en tablet (md) */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
           {filteredRecipes.map(recipe => {
             const catColor = CATEGORY_COLORS[recipe.category] || CATEGORY_COLORS.todos;
@@ -171,7 +194,6 @@ function App() {
               >
                 <div className={`relative h-20 sm:h-36 flex items-center justify-center px-2 sm:px-3 overflow-hidden transition-colors ${catColor.bg}`}>
                   <div className="relative z-10 w-full text-center">
-                    {/* Fuente Lato a exactamente 14px para tarjetas */}
                     <h3 className={`font-sans font-black text-[13px] sm:text-[14px] leading-tight tracking-tight text-stone-900 px-1 line-clamp-2`}>
                       {recipe.title}
                     </h3>

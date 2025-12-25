@@ -55,11 +55,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
       {/* Decorative Bottom Info */}
       <footer className="absolute bottom-12 left-12 right-12 flex justify-between items-center text-[10px] font-bold text-stone-500 tracking-[0.2em] uppercase hidden md:flex opacity-0 animate-fade-in delay-700">
         <div className="flex gap-8">
-          <span>400 Recetas Locales</span>
-          <span>Privacidad Garantizada</span>
+          <span>1.000 RECETAS DE AUTOR</span>
+          <span>PRIVACIDAD TOTAL</span>
         </div>
         <div>
-          <span>© 2024 Desarrollado por Tu Nombre - Todos los derechos reservados</span>
+          <span>© 2024 Desarrollado por GourmetVoice - Sin dependencias externas</span>
         </div>
       </footer>
       
