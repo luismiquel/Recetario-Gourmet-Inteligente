@@ -66,6 +66,9 @@ function App() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [globalVoiceEnabled, setGlobalVoiceEnabled] = useState(false);
+  const [maxTime, setMaxTime] = useState<number | null>(null);
+  const [activeDifficulty, setActiveDifficulty] = useState<string | null>(null);
+
   const [favorites, setFavorites] = useState<number[]>(() => {
     try {
       return JSON.parse(localStorage.getItem('gourmet_favorites') || '[]');
@@ -103,9 +106,15 @@ function App() {
     return RECIPES.filter(r => {
       const matchCat = activeCategory === 'todos' || r.category === activeCategory;
       const q = searchQuery.toLowerCase();
-      return matchCat && (r.title.toLowerCase().includes(q) || r.ingredients.some(i => i.toLowerCase().includes(q)));
+      const matchSearch = matchCat && (r.title.toLowerCase().includes(q) || r.ingredients.some(i => i.toLowerCase().includes(q)));
+      
+      const recipeTimeVal = parseInt(r.time.split(' ')[0]) || 0;
+      const matchTime = maxTime === null || recipeTimeVal <= maxTime;
+      const matchDiff = activeDifficulty === null || r.difficulty === activeDifficulty;
+
+      return matchSearch && matchTime && matchDiff;
     });
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, maxTime, activeDifficulty]);
 
   if (showLanding) return <LandingPage onEnter={() => setShowLanding(false)} />;
 
@@ -138,70 +147,137 @@ function App() {
           </div>
         </nav>
 
-        <div className="max-w-7xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto scrollbar-hide">
-          {['todos', 'desayuno', 'aperitivo', 'primero', 'segundo', 'postre'].map(cat => {
-            const theme = CATEGORY_THEMES[cat] || CATEGORY_THEMES.todos;
-            return (
-              <button 
-                key={cat} 
-                onClick={() => setActiveCategory(cat)} 
-                className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all shrink-0 flex items-center gap-3 border-3 ${
-                  activeCategory === cat ? `${theme.header} border-stone-900 text-stone-950 shadow-xl scale-105` : 'bg-white text-stone-400 border-stone-100 hover:border-stone-300'
-                }`}
-              >
-                {cat} <span className="opacity-50 text-[9px] font-bold">{counts[cat]}</span>
-              </button>
-            );
-          })}
+        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-3">
+          {/* Fila de Categorías */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+            {['todos', 'desayuno', 'aperitivo', 'primero', 'segundo', 'postre'].map(cat => {
+              const theme = CATEGORY_THEMES[cat] || CATEGORY_THEMES.todos;
+              return (
+                <button 
+                  key={cat} 
+                  onClick={() => setActiveCategory(cat)} 
+                  className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all shrink-0 flex items-center gap-3 border-3 ${
+                    activeCategory === cat ? `${theme.header} border-stone-900 text-stone-950 shadow-xl scale-105` : 'bg-white text-stone-400 border-stone-100 hover:border-stone-300'
+                  }`}
+                >
+                  {cat} <span className="opacity-50 text-[9px] font-bold">{counts[cat]}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Fila de Filtros Adicionales (Tiempo y Dificultad) */}
+          <div className="flex flex-wrap gap-4 items-center">
+            {/* Filtro Tiempo */}
+            <div className="flex gap-2 items-center bg-stone-100 p-1 rounded-2xl border border-stone-200">
+              <span className="text-[9px] font-black uppercase text-stone-400 px-3 tracking-widest">Tiempo:</span>
+              {[
+                { label: 'Todos', val: null },
+                { label: '< 15 min', val: 15 },
+                { label: '< 30 min', val: 30 },
+                { label: '< 60 min', val: 60 }
+              ].map(t => (
+                <button
+                  key={t.label}
+                  onClick={() => setMaxTime(t.val)}
+                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all ${
+                    maxTime === t.val ? 'bg-stone-900 text-white shadow-md' : 'text-stone-500 hover:bg-stone-200'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Filtro Dificultad */}
+            <div className="flex gap-2 items-center bg-stone-100 p-1 rounded-2xl border border-stone-200">
+              <span className="text-[9px] font-black uppercase text-stone-400 px-3 tracking-widest">Dificultad:</span>
+              {[
+                { label: 'Todos', val: null },
+                { label: 'Fácil', val: 'Baja' },
+                { label: 'Media', val: 'Media' },
+                { label: 'Alta', val: 'Alta' }
+              ].map(d => (
+                <button
+                  key={d.label}
+                  onClick={() => setActiveDifficulty(d.val)}
+                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all ${
+                    activeDifficulty === d.val ? 'bg-stone-900 text-white shadow-md' : 'text-stone-500 hover:bg-stone-200'
+                  }`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Contador de resultados */}
+            <div className="ml-auto text-[10px] font-black text-stone-400 uppercase tracking-widest bg-white px-4 py-2 rounded-xl border border-stone-100">
+              Mostrando <span className="text-stone-900">{filteredRecipes.length}</span> recetas
+            </div>
+          </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8">
-          {filteredRecipes.map((recipe) => {
-            const theme = CATEGORY_THEMES[recipe.category] || CATEGORY_THEMES.todos;
-            return (
-              <article 
-                key={recipe.id} 
-                onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }}
-                className={`group relative bg-white rounded-[2rem] border-4 ${theme.border} overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer flex flex-col h-full active:scale-95`}
-              >
-                <div className={`relative h-32 sm:h-48 flex items-center justify-center px-4 transition-all ${theme.header}`}>
-                  <h3 className="font-sans font-black text-[14px] sm:text-[20px] leading-tight tracking-tighter text-stone-950 text-center line-clamp-3 uppercase drop-shadow-sm">
-                    {recipe.title}
-                  </h3>
-                  <div className="absolute top-3 right-3 w-8 h-8 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center text-stone-950 border-2 border-white/30 shadow-sm">
-                    {favorites.includes(recipe.id) ? '★' : '☆'}
+        {filteredRecipes.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8">
+            {filteredRecipes.map((recipe) => {
+              const theme = CATEGORY_THEMES[recipe.category] || CATEGORY_THEMES.todos;
+              return (
+                <article 
+                  key={recipe.id} 
+                  onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }}
+                  className={`group relative bg-white rounded-[2rem] border-4 ${theme.border} overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer flex flex-col h-full active:scale-95`}
+                >
+                  <div className={`relative h-32 sm:h-48 flex items-center justify-center px-4 transition-all ${theme.header}`}>
+                    <h3 className="font-sans font-black text-[14px] sm:text-[20px] leading-tight tracking-tighter text-stone-950 text-center line-clamp-3 uppercase drop-shadow-sm">
+                      {recipe.title}
+                    </h3>
+                    <div className="absolute top-3 right-3 w-8 h-8 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center text-stone-950 border-2 border-white/30 shadow-sm">
+                      {favorites.includes(recipe.id) ? '★' : '☆'}
+                    </div>
                   </div>
-                </div>
 
-                <div className="p-4 sm:p-6 flex-1 flex flex-col">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className={`px-3 py-1 rounded-xl text-[9px] sm:text-[11px] font-black uppercase tracking-widest ${theme.light} ${theme.text} border border-black/5`}>
-                      {recipe.category}
-                    </span>
-                    <span className="text-[9px] sm:text-[11px] font-black text-stone-500">{recipe.time}</span>
-                  </div>
-                  
-                  <p className="text-stone-600 text-[11px] sm:text-[15px] line-clamp-3 italic opacity-90 leading-tight mb-5 font-bold font-['Lato']">
-                    {recipe.description}
-                  </p>
+                  <div className="p-4 sm:p-6 flex-1 flex flex-col">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className={`px-3 py-1 rounded-xl text-[9px] sm:text-[11px] font-black uppercase tracking-widest ${theme.light} ${theme.text} border border-black/5`}>
+                        {recipe.category}
+                      </span>
+                      <span className="text-[9px] sm:text-[11px] font-black text-stone-500">{recipe.time}</span>
+                    </div>
+                    
+                    <p className="text-stone-600 text-[11px] sm:text-[15px] line-clamp-3 italic opacity-90 leading-tight mb-5 font-bold font-['Lato']">
+                      {recipe.description}
+                    </p>
 
-                  <div className="mt-auto pt-4 border-t-2 border-stone-100 flex justify-between items-center">
-                     <div className="flex gap-2">
-                        {[1, 2, 3].map(i => (
-                          <div key={i} className={`w-2.5 h-2.5 rounded-full ${i <= (recipe.difficulty === 'Baja' ? 1 : recipe.difficulty === 'Media' ? 2 : 3) ? theme.accent : 'bg-stone-200'}`}></div>
-                        ))}
-                     </div>
-                     <span className={`px-5 py-2.5 rounded-2xl text-[10px] sm:text-[13px] font-black uppercase tracking-[0.2em] ${theme.accent} text-white shadow-xl group-hover:scale-110 transition-transform`}>
-                       COCINAR
-                     </span>
+                    <div className="mt-auto pt-4 border-t-2 border-stone-100 flex justify-between items-center">
+                       <div className="flex gap-2">
+                          {[1, 2, 3].map(i => (
+                            <div key={i} className={`w-2.5 h-2.5 rounded-full ${i <= (recipe.difficulty === 'Baja' ? 1 : recipe.difficulty === 'Media' ? 2 : 3) ? theme.accent : 'bg-stone-200'}`}></div>
+                          ))}
+                       </div>
+                       <span className={`px-5 py-2.5 rounded-2xl text-[10px] sm:text-[13px] font-black uppercase tracking-[0.2em] ${theme.accent} text-white shadow-xl group-hover:scale-110 transition-transform`}>
+                         COCINAR
+                       </span>
+                    </div>
                   </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="text-6xl mb-6">🍳</div>
+            <h2 className="text-2xl font-black text-stone-900 uppercase tracking-tighter mb-2">No hay recetas que coincidan</h2>
+            <p className="text-stone-500 font-bold max-w-xs mx-auto">Prueba ajustando los filtros de tiempo o dificultad.</p>
+            <button 
+              onClick={() => { setMaxTime(null); setActiveDifficulty(null); setActiveCategory('todos'); setSearchQuery(''); }}
+              className="mt-8 px-8 py-3 bg-stone-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl active:scale-95"
+            >
+              Limpiar todos los filtros
+            </button>
+          </div>
+        )}
       </main>
 
       {selectedRecipe && (
