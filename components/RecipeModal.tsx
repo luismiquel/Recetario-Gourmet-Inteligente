@@ -2,14 +2,15 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Recipe, VoiceStatus } from '../types.ts';
 import { useVoiceAssistant } from '../hooks/useVoiceAssistant.ts';
-import { CATEGORY_THEMES } from '../App.tsx';
+import { CATEGORY_THEMES } from '../data.ts';
 
 interface RecipeModalProps {
   recipe: Recipe | null;
   isOpen: boolean;
   onClose: () => void;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
   onAddIngredients: (ingredients: string[]) => void;
-  onUpdateTime: (recipeId: number, newTime: string) => void;
 }
 
 type ViewMode = 'full' | 'ingredients';
@@ -67,20 +68,23 @@ const VoiceStatusIndicator: React.FC<{ status: VoiceStatus, theme: any }> = ({ s
   );
 };
 
-export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClose }) => {
+export const RecipeModal: React.FC<RecipeModalProps> = ({ 
+  recipe, isOpen, onClose, isFavorite, onToggleFavorite, onAddIngredients 
+}) => {
   const [activeStep, setActiveStep] = useState(0);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('full');
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const [showShareToast, setShowShareToast] = useState(false);
 
+  // Se corrige el acceso al tema usando CATEGORY_THEMES de data.ts y garantizando que recipe no es null
+  // Se maneja el posible error de tipo 'unknown' al indexar si CATEGORY_THEMES no estaba inicializado por dependencia circular
   const theme = recipe ? (CATEGORY_THEMES[recipe.category] || CATEGORY_THEMES.todos) : null;
 
   const handleShare = useCallback(() => {
     if (!recipe) return;
     const url = new URL(window.location.origin + window.location.pathname);
     url.searchParams.set('recipeId', recipe.id.toString());
-    
     navigator.clipboard.writeText(url.toString()).then(() => {
       setShowShareToast(true);
       setTimeout(() => setShowShareToast(false), 2500);
@@ -105,10 +109,18 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
     speak(`Repito el paso ${activeStep + 1}: ${recipe.steps[activeStep]}`);
   }, [recipe, activeStep]);
 
+  const handleAddSelectionToShoppingList = useCallback(() => {
+    if (!recipe) return;
+    const items = checkedIngredients.size > 0 
+      ? Array.from(checkedIngredients).map(i => recipe.ingredients[i])
+      : recipe.ingredients;
+    onAddIngredients(items);
+    speak("Ingredientes añadidos a tu lista de la compra.");
+  }, [recipe, checkedIngredients, onAddIngredients]);
+
   const handleCommand = useCallback((cmd: string) => {
     const c = cmd.toLowerCase();
     
-    // COMANDOS DE NAVEGACIÓN
     if (/(siguiente|próximo|pasa|adelante|ok|listo|ya|continuar)/.test(c)) {
       nextStep();
     } else if (/(anterior|atrás|atras|vuelve|antes)/.test(c)) {
@@ -116,7 +128,6 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
     } else if (/(repite|repetir|otra vez|no he oído|dime)/.test(c)) {
       repeatStep();
     } 
-    // COMANDOS DE VISTA
     else if (/(ingredientes|lista|ver ingredientes|necesito)/.test(c)) {
       setViewMode('ingredients');
       speak("Cambiando a lista de ingredientes.");
@@ -124,25 +135,30 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
       setViewMode('full');
       speak("Volviendo a los pasos de preparación.");
     } 
-    // COMANDOS DE SISTEMA
+    else if (/(añadir ingredientes|añadir a la lista|guardar ingredientes|añadir a la compra)/.test(c)) {
+      handleAddSelectionToShoppingList();
+    }
+    else if (/(favoritos|guardar receta|me gusta|marcar)/.test(c)) {
+      onToggleFavorite();
+      speak(isFavorite ? "Receta eliminada de favoritos." : "Receta guardada en tus favoritos.");
+    }
     else if (/(cerrar|salir|adiós|adios|terminar|finalizar)/.test(c)) {
       speak("Cerrando receta. ¡Disfruta de tu comida!");
       setTimeout(onClose, 1200);
     } else if (/(desactivar voz|silencio|callar|apagar asistente)/.test(c)) {
-      speak("Entendido, desactivando asistente de voz. Pulsa el botón inferior para volver a activarme.");
+      speak("Desactivando asistente de voz.");
       setTimeout(() => setVoiceEnabled(false), 1500);
     } else if (/(compartir|copiar|enviar|link)/.test(c)) {
       handleShare();
       speak("Enlace de receta copiado.");
     }
-  }, [nextStep, prevStep, repeatStep, onClose, handleShare]);
+  }, [nextStep, prevStep, repeatStep, onClose, handleShare, handleAddSelectionToShoppingList, onToggleFavorite, isFavorite]);
 
   const { status, speak } = useVoiceAssistant({
     enabled: voiceEnabled && isOpen,
     onCommand: handleCommand
   });
 
-  // Lectura automática de pasos al cambiar o abrir
   useEffect(() => {
     if (isOpen && recipe && voiceEnabled && viewMode === 'full') {
       const stepText = recipe.steps[activeStep];
@@ -162,19 +178,24 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
       
       <div className="relative w-full max-w-5xl h-[95vh] bg-stone-900 rounded-[2.5rem] sm:rounded-[4rem] shadow-2xl flex flex-col overflow-hidden border border-stone-800">
         
-        {/* Header Dinámico */}
         <header className={`shrink-0 pt-12 pb-8 px-6 sm:px-16 relative border-b-2 ${theme.border} ${theme.header} shadow-xl`}>
           <div className="absolute top-6 right-6 flex gap-3 z-10">
              <VoiceStatusIndicator status={status} theme={theme} />
              
              <button 
+               onClick={onToggleFavorite}
+               className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 border-stone-800 shadow-xl hover:scale-110 transition-all active:scale-95 ${isFavorite ? 'bg-yellow-500 text-white' : 'bg-stone-950 text-white'}`}
+               title="Favorito"
+             >
+                {isFavorite ? '❤️' : '♡'}
+             </button>
+
+             <button 
               onClick={handleShare}
-              className="w-12 h-12 bg-stone-950 text-white rounded-2xl flex items-center justify-center border-2 border-stone-800 shadow-xl hover:scale-110 transition-all relative overflow-hidden active:scale-95"
+              className="w-12 h-12 bg-stone-950 text-white rounded-2xl flex items-center justify-center border-2 border-stone-800 shadow-xl hover:scale-110 transition-all active:scale-95"
              >
                 <span className={`transition-all duration-300 ${showShareToast ? 'scale-0' : 'scale-100 text-xl'}`}>🔗</span>
-                {showShareToast && (
-                  <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black uppercase text-amber-500 animate-in zoom-in">Listo</span>
-                )}
+                {showShareToast && <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black uppercase text-amber-500 animate-in zoom-in">Listo</span>}
              </button>
 
              <button onClick={onClose} className="w-12 h-12 bg-stone-950 text-white rounded-2xl flex items-center justify-center border-2 border-stone-800 shadow-xl hover:scale-110 transition-all">✕</button>
@@ -182,16 +203,16 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl sm:text-5xl font-black text-stone-950 leading-tight mb-6 tracking-tighter uppercase drop-shadow-sm line-clamp-2">{recipe.title}</h2>
             
-            <div className="inline-flex p-1.5 bg-black/10 backdrop-blur-3xl rounded-2xl sm:rounded-3xl border border-white/20 shadow-inner">
+            <div className="inline-flex p-1.5 bg-black/10 backdrop-blur-3xl rounded-2xl border border-white/20 shadow-inner">
               <button 
                 onClick={() => setViewMode('full')} 
-                className={`px-8 sm:px-12 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${viewMode === 'full' ? 'bg-stone-950 text-white shadow-2xl scale-105' : 'text-stone-950 hover:bg-white/20'}`}
+                className={`px-8 sm:px-12 py-3 sm:py-4 rounded-xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${viewMode === 'full' ? 'bg-stone-950 text-white shadow-2xl scale-105' : 'text-stone-950 hover:bg-white/20'}`}
               >
                 PREPARACIÓN
               </button>
               <button 
                 onClick={() => setViewMode('ingredients')} 
-                className={`px-8 sm:px-12 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${viewMode === 'ingredients' ? `${theme.accent} text-white shadow-2xl scale-105` : 'text-stone-950 hover:bg-white/20'}`}
+                className={`px-8 sm:px-12 py-3 sm:py-4 rounded-xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${viewMode === 'ingredients' ? `${theme.accent} text-white shadow-2xl scale-105` : 'text-stone-950 hover:bg-white/20'}`}
               >
                 INGREDIENTES
               </button>
@@ -199,12 +220,19 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
           </div>
         </header>
 
-        {/* Cuerpo de la Receta */}
         <div className="flex-1 overflow-y-auto px-6 sm:px-16 py-8 sm:py-12 scrollbar-hide bg-stone-950">
           <div className="max-w-4xl mx-auto">
             {viewMode === 'ingredients' ? (
               <div className="space-y-8 animate-in slide-in-from-bottom-12 duration-700">
-                <h3 className="text-3xl sm:text-4xl font-black text-white border-b-4 border-stone-800 pb-4 inline-block uppercase tracking-tighter">Qué necesitas</h3>
+                <div className="flex justify-between items-center border-b-4 border-stone-800 pb-4">
+                  <h3 className="text-3xl sm:text-4xl font-black text-white uppercase tracking-tighter">Qué necesitas</h3>
+                  <button 
+                    onClick={handleAddSelectionToShoppingList}
+                    className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${checkedIngredients.size > 0 ? 'bg-amber-600 text-white animate-pulse' : 'bg-stone-800 text-stone-400'}`}
+                  >
+                    {checkedIngredients.size > 0 ? `Añadir selección (${checkedIngredients.size})` : 'Añadir todos a la lista'}
+                  </button>
+                </div>
                 <ul className="grid grid-cols-1 gap-y-4 sm:gap-y-8">
                   {recipe.ingredients.map((ing, i) => (
                     <li 
@@ -216,10 +244,10 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
                       }} 
                       className="flex items-center gap-6 sm:gap-10 cursor-pointer group py-3 sm:py-5 border-b border-stone-900 hover:border-stone-700 transition-colors"
                     >
-                      <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl border-2 flex items-center justify-center shrink-0 transition-all duration-300 ${checkedIngredients.has(i) ? `${theme.accent} border-transparent shadow-xl scale-110` : 'border-stone-800 bg-stone-900 group-hover:border-stone-600'}`}>
+                      <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl border-2 flex items-center justify-center shrink-0 transition-all duration-300 ${checkedIngredients.has(i) ? `${theme.accent} border-transparent shadow-xl scale-110` : 'border-stone-800 bg-stone-900'}`}>
                         {checkedIngredients.has(i) && <span className="text-white text-xl sm:text-3xl font-black animate-in zoom-in">✓</span>}
                       </div>
-                      <span className={`font-bold text-xl sm:text-3xl tracking-tight leading-snug transition-all ${checkedIngredients.has(i) ? 'text-stone-700 line-through italic opacity-50' : 'text-stone-100 group-hover:translate-x-3'}`}>
+                      <span className={`font-bold text-xl sm:text-3xl tracking-tight transition-all ${checkedIngredients.has(i) ? 'text-stone-700 line-through italic opacity-50' : 'text-stone-100 group-hover:translate-x-3'}`}>
                         {ing}
                       </span>
                     </li>
@@ -230,16 +258,13 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
               <div className="space-y-8 animate-in slide-in-from-bottom-12 duration-700 pb-20">
                 <div className="flex items-end justify-between border-b-4 border-stone-800 pb-5 mb-8">
                   <h3 className="text-3xl sm:text-4xl font-black text-white uppercase tracking-tighter">Cómo se hace</h3>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-black text-stone-600 uppercase tracking-widest">TIEMPO ESTIMADO:</span>
-                    <span className="text-xl sm:text-2xl font-black text-white uppercase tracking-widest">{recipe.time}</span>
-                  </div>
+                  <span className="text-xl font-black text-white tracking-widest">{recipe.time}</span>
                 </div>
                 {recipe.steps.map((step, i) => (
                   <div 
                     key={i} 
                     onClick={() => setActiveStep(i)} 
-                    className={`p-8 sm:p-14 rounded-[2rem] sm:rounded-[3.5rem] border-2 transition-all duration-500 cursor-pointer ${activeStep === i ? `border-white ${theme.bg} shadow-2xl scale-[1.02] z-10 relative ring-8 ring-white/5` : 'border-transparent opacity-20 hover:opacity-40'}`}
+                    className={`p-8 sm:p-14 rounded-[2rem] border-2 transition-all duration-500 cursor-pointer ${activeStep === i ? `border-white ${theme.bg} shadow-2xl scale-[1.02] z-10 relative ring-8 ring-white/5` : 'border-transparent opacity-20 hover:opacity-40'}`}
                   >
                     <div className="flex gap-6 sm:gap-12 items-start">
                       <span className={`text-4xl sm:text-7xl font-black italic select-none ${activeStep === i ? 'text-stone-950' : 'text-stone-500'}`}>
@@ -256,15 +281,10 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
           </div>
         </div>
 
-        {/* Footer con Switch Maestro de Voz */}
-        <footer className="shrink-0 p-6 sm:p-10 bg-stone-950 border-t-2 border-stone-800 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+        <footer className="shrink-0 p-6 sm:p-10 bg-stone-950 border-t-2 border-stone-800">
           <button 
-            onClick={() => {
-              const newState = !voiceEnabled;
-              setVoiceEnabled(newState);
-              if (newState) speak("Asistente reactivado. ¿En qué puedo ayudarte?");
-            }} 
-            className={`w-full py-6 sm:py-8 rounded-[2rem] sm:rounded-[3rem] font-black text-[12px] sm:text-[16px] tracking-[0.4em] sm:tracking-[0.6em] transition-all duration-500 flex items-center justify-center gap-6 shadow-2xl active:scale-95 ${voiceEnabled ? `${theme.accent} text-white hover:brightness-110` : 'bg-stone-800 text-stone-400 hover:bg-stone-700'}`}
+            onClick={() => setVoiceEnabled(!voiceEnabled)} 
+            className={`w-full py-6 sm:py-8 rounded-[2rem] font-black text-[12px] sm:text-[16px] tracking-[0.4em] transition-all duration-500 flex items-center justify-center gap-6 shadow-2xl active:scale-95 ${voiceEnabled ? `${theme.accent} text-white` : 'bg-stone-800 text-stone-400'}`}
           >
             <span className="text-2xl sm:text-4xl">{voiceEnabled ? '🎙️' : '🔇'}</span>
             {voiceEnabled ? 'MODO MANOS LIBRES: ON' : 'ACTIVAR MANOS LIBRES'}

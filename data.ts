@@ -1,6 +1,67 @@
 
 import { Recipe } from './types.ts';
 
+// Temas visuales para cada categoría de receta
+// Se mueve aquí para evitar dependencias circulares entre App.tsx y RecipeModal.tsx
+export const CATEGORY_THEMES: Record<string, { bg: string, text: string, accent: string, light: string, border: string, header: string }> = {
+  desayuno: { 
+    header: 'bg-amber-400', 
+    bg: 'bg-stone-900', 
+    text: 'text-amber-400', 
+    accent: 'bg-amber-500', 
+    light: 'bg-amber-950', 
+    border: 'border-amber-500/30' 
+  },
+  aperitivo: { 
+    header: 'bg-orange-500', 
+    bg: 'bg-stone-900', 
+    text: 'text-orange-400', 
+    accent: 'bg-orange-600', 
+    light: 'bg-orange-950', 
+    border: 'border-orange-500/30' 
+  },
+  primero: { 
+    header: 'bg-emerald-500', 
+    bg: 'bg-stone-900', 
+    text: 'text-emerald-400', 
+    accent: 'bg-emerald-600', 
+    light: 'bg-emerald-950', 
+    border: 'border-emerald-500/30' 
+  },
+  segundo: { 
+    header: 'bg-rose-600', 
+    bg: 'bg-stone-900', 
+    text: 'text-rose-400', 
+    accent: 'bg-rose-700', 
+    light: 'bg-rose-950', 
+    border: 'border-rose-500/30' 
+  },
+  postre: { 
+    header: 'bg-fuchsia-600', 
+    bg: 'bg-stone-900', 
+    text: 'text-fuchsia-400', 
+    accent: 'bg-fuchsia-700', 
+    light: 'bg-fuchsia-950', 
+    border: 'border-fuchsia-500/30' 
+  },
+  todos: { 
+    header: 'bg-stone-700', 
+    bg: 'bg-stone-900', 
+    text: 'text-stone-300', 
+    accent: 'bg-stone-100', 
+    light: 'bg-stone-800', 
+    border: 'border-stone-700' 
+  },
+  favoritos: {
+    header: 'bg-yellow-500', 
+    bg: 'bg-stone-900', 
+    text: 'text-yellow-400', 
+    accent: 'bg-yellow-600', 
+    light: 'bg-yellow-950', 
+    border: 'border-yellow-500/30'
+  }
+};
+
 const BASES_TECNICAS = {
   arroz: {
     base: ['Arroz Carnaroli o Bomba', 'Caldo casero caliente', 'Cebolla chalota', 'Vino blanco seco', 'Mantequilla', 'Parmesano'],
