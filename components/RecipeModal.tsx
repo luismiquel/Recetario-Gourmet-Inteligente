@@ -48,9 +48,9 @@ const VoiceStatusIndicator: React.FC<{ status: VoiceStatus, theme: any }> = ({ s
   const getLabel = () => {
     switch (status) {
       case 'listening': return 'Te escucho';
-      case 'processing': return 'Pensando';
+      case 'processing': return 'Procesando';
       case 'speaking': return 'Gourmet habla';
-      case 'error': return 'Error de voz';
+      case 'error': return 'Error micro';
       default: return '';
     }
   };
@@ -89,46 +89,69 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
 
   const nextStep = useCallback(() => {
     if (!recipe) return;
-    setActiveStep(prev => Math.min(prev + 1, recipe.steps.length - 1));
-  }, [recipe]);
+    if (activeStep < recipe.steps.length - 1) {
+      setActiveStep(prev => prev + 1);
+    } else {
+      speak("Has terminado todos los pasos. ¡Buen provecho!");
+    }
+  }, [recipe, activeStep]);
 
   const prevStep = useCallback(() => {
     setActiveStep(prev => Math.max(prev - 1, 0));
   }, []);
 
+  const repeatStep = useCallback(() => {
+    if (!recipe) return;
+    speak(`Repitiendo paso ${activeStep + 1}: ${recipe.steps[activeStep]}`);
+  }, [recipe, activeStep]);
+
   const handleCommand = useCallback((cmd: string) => {
     const c = cmd.toLowerCase();
-    console.log("Comando en modal:", c);
-
+    
+    // Navegación de pasos
     if (/(siguiente|próximo|pasa|adelante|ok|listo|ya|continuar)/.test(c)) {
       nextStep();
-    } else if (/(anterior|atrás|atras|vuelve|antes|repetir)/.test(c)) {
+    } else if (/(anterior|atrás|atras|vuelve|antes)/.test(c)) {
       prevStep();
-    } else if (/(cerrar|salir|adiós|adios|terminar|finalizar)/.test(c)) {
-      onClose();
-    } else if (/(ingredientes|lista|ver lista|qué necesito|que necesito|necesito)/.test(c)) {
+    } else if (/(repite|repetir|otra vez|no he oído|no he oido|dime)/.test(c)) {
+      repeatStep();
+    } 
+    // Control de Vistas
+    else if (/(ingredientes|lista|ver lista|qué necesito|que necesito|necesito)/.test(c)) {
       setViewMode('ingredients');
+      speak("Mostrando lista de ingredientes.");
     } else if (/(pasos|preparación|instrucciones|cocinar|volver)/.test(c)) {
       setViewMode('full');
+      speak("Volviendo a las instrucciones de preparación.");
+    } 
+    // Control de Sistema
+    else if (/(cerrar|salir|adiós|adios|terminar|finalizar)/.test(c)) {
+      speak("Cerrando receta. ¡Hasta pronto!");
+      setTimeout(onClose, 1500);
+    } else if (/(desactivar voz|silencio|apagar asistente|parar asistente)/.test(c)) {
+      speak("Desactivando asistente de voz. Pulsa el botón inferior para reactivarlo.");
+      setTimeout(() => setVoiceEnabled(false), 2000);
     } else if (/(compartir|copiar|enviar|link|enlace)/.test(c)) {
       handleShare();
+      speak("Enlace de receta copiado al portapapeles.");
     }
-  }, [nextStep, prevStep, onClose, handleShare]);
+  }, [nextStep, prevStep, repeatStep, onClose, handleShare]);
 
   const { status, speak } = useVoiceAssistant({
     enabled: voiceEnabled && isOpen,
     onCommand: handleCommand
   });
 
+  // Lectura automática al cambiar de paso o abrir
   useEffect(() => {
     if (isOpen && recipe && voiceEnabled) {
-      if (activeStep === 0 && status === 'idle') {
-        speak(`${recipe.title}. Di "Siguiente" para empezar.`);
-      } else if (activeStep > 0) {
+      if (activeStep === 0 && viewMode === 'full') {
+        speak(`Iniciando ${recipe.title}. Paso 1: ${recipe.steps[0]}`);
+      } else if (activeStep > 0 && viewMode === 'full') {
         speak(`Paso ${activeStep + 1}: ${recipe.steps[activeStep]}`);
       }
     }
-  }, [activeStep, isOpen, recipe, voiceEnabled]);
+  }, [activeStep, isOpen, viewMode, voiceEnabled]);
 
   if (!isOpen || !recipe || !theme) return null;
 
@@ -146,7 +169,6 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
              <button 
               onClick={handleShare}
               className="w-10 h-10 sm:w-12 sm:h-12 bg-stone-950 text-white rounded-xl sm:rounded-2xl flex items-center justify-center border-2 border-stone-800 font-black shadow-xl hover:scale-105 transition-all relative overflow-hidden active:scale-95"
-              title="Compartir"
              >
                 <span className={`transition-all duration-300 ${showShareToast ? 'scale-0' : 'scale-100 text-lg sm:text-xl'}`}>🔗</span>
                 {showShareToast && (
@@ -186,10 +208,12 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
               <div className="space-y-6 animate-in slide-in-from-bottom-8 duration-500 pb-12">
                 <div className="flex items-end justify-between border-b-4 border-stone-800 pb-3 mb-6 sm:mb-10">
                   <h3 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tighter">Preparación</h3>
-                  <span className="text-lg sm:text-2xl font-black text-stone-600 uppercase tracking-widest">{recipe.time}</span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-lg sm:text-2xl font-black text-stone-600 uppercase tracking-widest">{recipe.time}</span>
+                  </div>
                 </div>
                 {recipe.steps.map((step, i) => (
-                  <div key={i} onClick={() => setActiveStep(i)} className={`p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[2.5rem] border-2 transition-all duration-300 cursor-pointer ${activeStep === i ? `border-white ${theme.bg} shadow-2xl scale-[1.01] z-10 relative` : 'border-transparent opacity-20 hover:opacity-40'}`}>
+                  <div key={i} onClick={() => setActiveStep(i)} className={`p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[2.5rem] border-2 transition-all duration-300 cursor-pointer ${activeStep === i ? `border-white ${theme.bg} shadow-2xl scale-[1.01] z-10 relative ring-4 ring-white/10` : 'border-transparent opacity-20 hover:opacity-40'}`}>
                     <div className="flex gap-4 sm:gap-8 items-start">
                       <span className={`text-3xl sm:text-5xl font-black italic select-none ${activeStep === i ? 'text-stone-950' : 'text-stone-500'}`}>{String(i + 1).padStart(2, '0')}</span>
                       <p className={`font-['Lato'] font-bold text-[22px] sm:text-[30px] leading-tight tracking-tight ${activeStep === i ? 'text-stone-950' : 'text-stone-300'}`}>{step}</p>
