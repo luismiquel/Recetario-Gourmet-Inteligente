@@ -30,6 +30,7 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
   }, []);
 
   const startRecognition = useCallback(() => {
+    // Si está desactivado, si estamos hablando o si se paró manualmente, no iniciamos.
     if (!enabled || isSpeakingRef.current || manuallyStopped.current) return;
     
     try {
@@ -38,6 +39,7 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
         setStatus('listening');
       }
     } catch (e) {
+      // Evitar errores si ya está escuchando
       if (status !== 'speaking') setStatus('listening');
     }
   }, [enabled, status]);
@@ -54,19 +56,19 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-ES';
-    utterance.rate = 1.05; // Ligeramente más rápido para fluidez
+    utterance.rate = 1.05; 
     utterance.pitch = 1.0;
 
     utterance.onend = () => {
       isSpeakingRef.current = false;
-      // Delay de 600ms para asegurar que el eco de los altavoces no active el micro
+      // Delay de seguridad de 800ms: vital para que el micro no capte el eco residual de los altavoces
       restartTimeoutRef.current = window.setTimeout(() => {
         if (!manuallyStopped.current && enabled) {
           startRecognition();
         } else {
           setStatus('idle');
         }
-      }, 600);
+      }, 800);
     };
 
     utterance.onerror = () => {
@@ -95,17 +97,19 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
         const lastResultIndex = event.results.length - 1;
         const command = event.results[lastResultIndex][0].transcript;
         if (command) {
+          console.log("Audio capturado:", command);
           setStatus('processing');
           onCommand(command.trim());
           
-          // Si no hay habla inmediata después del comando, volvemos a escuchar
+          // Reset status a listening si no se dispara un speak que cambie el estado
           setTimeout(() => {
             if (!isSpeakingRef.current && enabled) setStatus('listening');
-          }, 800);
+          }, 1000);
         }
       };
 
       recognition.onend = () => {
+        // Reinicio automático por timeout del navegador si el usuario no ha hablado
         if (enabled && !isSpeakingRef.current && !manuallyStopped.current) {
           startRecognition();
         }
