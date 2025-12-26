@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Recipe, VoiceStatus } from '../types.ts';
 import { useVoiceAssistant } from '../hooks/useVoiceAssistant.ts';
@@ -79,7 +78,8 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
 
   // Se corrige el acceso al tema usando CATEGORY_THEMES de data.ts y garantizando que recipe no es null
   // Se maneja el posible error de tipo 'unknown' al indexar si CATEGORY_THEMES no estaba inicializado por dependencia circular
-  const theme = recipe ? (CATEGORY_THEMES[recipe.category] || CATEGORY_THEMES.todos) : null;
+  // Fix: Explicitly cast category to string to avoid potential 'unknown' index type error during circular dependency resolution
+  const theme = recipe ? (CATEGORY_THEMES[recipe.category as string] || CATEGORY_THEMES.todos) : null;
 
   const handleShare = useCallback(() => {
     if (!recipe) return;
@@ -112,7 +112,8 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
   const handleAddSelectionToShoppingList = useCallback(() => {
     if (!recipe) return;
     const items = checkedIngredients.size > 0 
-      ? Array.from(checkedIngredients).map(i => recipe.ingredients[i])
+      // Fix: Explicitly type 'i' as number to prevent 'unknown' index type error (occurs in some TS versions with Array.from on Set)
+      ? Array.from(checkedIngredients).map((i: number) => recipe.ingredients[i])
       : recipe.ingredients;
     onAddIngredients(items);
     speak("Ingredientes añadidos a tu lista de la compra.");

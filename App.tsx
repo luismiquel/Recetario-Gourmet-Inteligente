@@ -173,53 +173,53 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-2 sm:px-4 py-3 sm:py-6">
         {filteredRecipes.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-8">
             {filteredRecipes.map((recipe) => {
               const theme = CATEGORY_THEMES[recipe.category] || CATEGORY_THEMES.todos;
               const isFav = favorites.includes(recipe.id);
               return (
                 <article 
                   key={recipe.id} 
-                  className="group relative bg-stone-900 rounded-[1.2rem] sm:rounded-[2rem] border border-stone-800 overflow-hidden shadow-xl hover:shadow-[0_0_40px_rgba(0,0,0,0.6)] transition-all duration-300 flex flex-col h-full"
+                  className={`group relative bg-gradient-to-br from-stone-900 via-stone-900 to-stone-950 rounded-[1.5rem] sm:rounded-[2.5rem] border-2 ${theme.border} overflow-hidden shadow-2xl hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-500 flex flex-col h-full hover:-translate-y-1`}
                 >
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleFavorite(recipe.id); }}
-                    className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${isFav ? 'bg-amber-500 text-white' : 'bg-black/30 text-white/60 hover:bg-black/50'}`}
+                    className={`absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${isFav ? 'bg-amber-500 text-white' : 'bg-black/30 text-white/60 hover:bg-black/50'}`}
                   >
                     {isFav ? '❤️' : '♡'}
                   </button>
 
                   <div 
                     onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }}
-                    className={`relative h-28 sm:h-40 flex items-center justify-center px-4 transition-all duration-500 group-hover:brightness-110 cursor-pointer ${theme.header}`}
+                    className={`relative h-32 sm:h-44 flex items-center justify-center px-6 transition-all duration-500 group-hover:brightness-110 cursor-pointer ${theme.header}`}
                   >
-                    <h3 className="font-sans font-black text-[12px] sm:text-[14px] leading-tight tracking-tight text-stone-950 text-center line-clamp-3 uppercase drop-shadow-md">
+                    <h3 className="font-sans font-black text-[16px] leading-snug tracking-tight text-stone-950 text-center line-clamp-3 uppercase drop-shadow-md">
                       {recipe.title}
                     </h3>
                   </div>
 
-                  <div className="p-3 sm:p-5 flex-1 flex flex-col bg-gradient-to-b from-stone-900 to-stone-950">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className={`px-2 py-0.5 rounded-md text-[7px] sm:text-[9px] font-black uppercase tracking-[0.1em] ${theme.light} ${theme.text} border ${theme.border}`}>
+                  <div className="p-4 sm:p-6 flex-1 flex flex-col">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className={`px-2.5 py-1 rounded-lg text-[8px] sm:text-[10px] font-black uppercase tracking-[0.15em] ${theme.light} ${theme.text} border ${theme.border}`}>
                         {recipe.category}
                       </span>
-                      <span className="text-[7px] sm:text-[9px] font-black text-stone-300 uppercase">{recipe.time}</span>
+                      <span className="text-[8px] sm:text-[10px] font-black text-stone-500 uppercase tracking-widest">{recipe.time}</span>
                     </div>
                     
-                    <p className="text-stone-400 text-[10px] sm:text-[13px] line-clamp-2 italic leading-snug mb-3 font-medium opacity-80">
+                    <p className="text-stone-400 text-[11px] sm:text-[13px] line-clamp-2 italic leading-relaxed mb-4 font-medium opacity-80">
                       {recipe.description}
                     </p>
 
-                    <div className="mt-auto pt-3 border-t border-stone-800/50 flex justify-between items-center">
+                    <div className="mt-auto pt-4 border-t border-stone-800/50 flex justify-between items-center">
                        <button 
                          onClick={() => addToShoppingList(recipe.ingredients)}
-                         className="text-[10px] font-black text-amber-500 uppercase tracking-tighter hover:text-amber-400 transition-colors"
+                         className="text-[10px] font-black text-amber-500 uppercase tracking-widest hover:text-amber-400 transition-colors"
                        >
-                         + Lista
+                         + LISTA
                        </button>
                        <button 
                          onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }}
-                         className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg text-[8px] sm:text-[10px] font-black uppercase tracking-widest ${theme.accent} text-white shadow-lg group-hover:scale-105 transition-transform`}
+                         className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[11px] font-black uppercase tracking-[0.2em] ${theme.accent} text-white shadow-xl hover:brightness-110 active:scale-95 transition-all`}
                        >
                          COCINAR
                        </button>
