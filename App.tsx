@@ -233,38 +233,41 @@ function App() {
                 <article 
                   key={recipe.id} 
                   onClick={() => { setSelectedRecipe(recipe); setIsModalOpen(true); }}
-                  className="group relative bg-stone-900 rounded-[1rem] sm:rounded-[1.5rem] border border-stone-800 overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-all duration-300 cursor-pointer flex flex-col h-full active:scale-95"
+                  className="group relative bg-stone-900 rounded-[1.2rem] sm:rounded-[1.5rem] border border-stone-800 overflow-hidden shadow-xl hover:shadow-[0_0_40px_rgba(0,0,0,0.6)] transition-all duration-300 cursor-pointer flex flex-col h-full active:scale-[0.98]"
                 >
-                  <div className={`relative h-24 sm:h-36 flex items-center justify-center px-2.5 sm:px-4 transition-all ${theme.header}`}>
-                    <h3 className="font-sans font-black text-[11px] sm:text-[12px] md:text-[14px] leading-tight tracking-tight text-stone-950 text-center line-clamp-2 uppercase drop-shadow-sm">
+                  <div className={`relative h-28 sm:h-40 flex items-center justify-center px-4 transition-all duration-500 group-hover:brightness-110 ${theme.header}`}>
+                    <h3 className="font-sans font-black text-[12px] sm:text-[14px] leading-tight tracking-tight text-stone-950 text-center line-clamp-3 uppercase drop-shadow-md">
                       {recipe.title}
                     </h3>
-                    <div className="absolute top-1.5 right-1.5 w-6 h-6 sm:w-8 sm:h-8 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-stone-950 border border-white/10 text-[9px] sm:text-sm">
+                    <div className="absolute top-2 right-2 w-7 h-7 sm:w-9 sm:h-9 bg-black/30 backdrop-blur-xl rounded-full flex items-center justify-center text-white border border-white/20 text-[10px] sm:text-sm">
                       {favorites.includes(recipe.id) ? '★' : '☆'}
                     </div>
                   </div>
 
-                  <div className="p-2.5 sm:p-4 flex-1 flex flex-col">
-                    <div className="flex justify-between items-center mb-1.5">
-                      <span className={`px-1.5 py-0.5 rounded-md sm:rounded-lg text-[7px] sm:text-[10px] font-black uppercase tracking-wider ${theme.light} ${theme.text}`}>
+                  <div className="p-3 sm:p-5 flex-1 flex flex-col bg-gradient-to-b from-stone-900 to-stone-950">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className={`px-2 py-0.5 rounded-md sm:rounded-lg text-[7px] sm:text-[9px] font-black uppercase tracking-[0.1em] ${theme.light} ${theme.text} border ${theme.border}`}>
                         {recipe.category}
                       </span>
-                      <span className="text-[7px] sm:text-[10px] font-black text-stone-500">{recipe.time}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[7px] sm:text-[9px] text-stone-500">⏳</span>
+                        <span className="text-[7px] sm:text-[9px] font-black text-stone-300 uppercase">{recipe.time}</span>
+                      </div>
                     </div>
                     
-                    <p className="text-stone-400 text-[9px] sm:text-[12px] line-clamp-2 italic leading-tight mb-2 font-bold">
+                    <p className="text-stone-400 text-[10px] sm:text-[13px] line-clamp-2 italic leading-snug mb-3 font-medium opacity-80 group-hover:opacity-100 transition-opacity">
                       {recipe.description}
                     </p>
 
-                    <div className="mt-auto pt-1.5 border-t border-stone-800 flex justify-between items-center">
-                       <div className="flex gap-0.5 sm:gap-1">
+                    <div className="mt-auto pt-3 border-t border-stone-800/50 flex justify-between items-center">
+                       <div className="flex gap-1 sm:gap-1.5">
                           {[1, 2, 3].map(i => (
-                            <div key={i} className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${i <= (recipe.difficulty === 'Baja' ? 1 : recipe.difficulty === 'Media' ? 2 : 3) ? theme.accent : 'bg-stone-800'}`}></div>
+                            <div key={i} className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-colors ${i <= (recipe.difficulty === 'Baja' ? 1 : recipe.difficulty === 'Media' ? 2 : 3) ? theme.accent : 'bg-stone-800'}`}></div>
                           ))}
                        </div>
-                       <span className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[8px] sm:text-[10px] font-black uppercase tracking-wider ${theme.accent} text-white shadow-md`}>
-                         VER
-                       </span>
+                       <div className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[8px] sm:text-[10px] font-black uppercase tracking-widest ${theme.accent} text-white shadow-lg group-hover:scale-105 transition-transform`}>
+                         COCINAR
+                       </div>
                     </div>
                   </div>
                 </article>
@@ -272,14 +275,15 @@ function App() {
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="text-4xl mb-4 text-stone-700">🥘</div>
-            <h2 className="text-lg font-black text-white uppercase tracking-tighter mb-1">Sin recetas</h2>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="text-6xl mb-6 animate-bounce">🍳</div>
+            <h2 className="text-xl font-black text-white uppercase tracking-tighter mb-2">No encontramos esa receta</h2>
+            <p className="text-stone-500 text-sm max-w-xs mx-auto mb-6 font-bold">Prueba a borrar los filtros o buscar ingredientes básicos como "arroz" o "queso".</p>
             <button 
               onClick={() => { setMaxTime(null); setActiveDifficulty(null); setActiveCategory('todos'); setSearchQuery(''); }}
-              className="mt-4 px-6 py-2 bg-stone-100 text-stone-950 rounded-xl font-black text-[9px] uppercase tracking-widest"
+              className="px-8 py-3 bg-white text-stone-950 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-colors shadow-2xl"
             >
-              Borrar filtros
+              Reiniciar búsqueda
             </button>
           </div>
         )}
