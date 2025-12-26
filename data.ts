@@ -42,7 +42,9 @@ const TITULOS_POOL = {
     'Risotto de Setas y Trufa Blanca',
     'Risotto de Gamba Roja Denia',
     'Pasta al Pesto de Pistacho',
-    'Crema de Calabaza y Coco'
+    'Crema de Calabaza y Coco',
+    'Risotto de Remolacha y Queso de Cabra',
+    'Risotto de Espárragos y Limón'
   ],
   segundo: [
     'Cochinillo Asado Crujiente', 'Bacalao al Pil-Pil', 'Solomillo al Oporto', 'Merluza en Salsa Verde',
@@ -57,10 +59,9 @@ const TITULOS_POOL = {
 function extraerIngredientePrincipal(titulo: string): string {
   const palabrasClave = titulo.split(' ');
   const preposiciones = ['de', 'con', 'a', 'al', 'los', 'las', 'y'];
-  return palabrasClave
-    .filter(p => !preposiciones.includes(p.toLowerCase()))
-    .slice(-2)
-    .join(' ');
+  // Intentamos sacar el ingrediente ignorando preposiciones
+  const filtradas = palabrasClave.filter(p => !preposiciones.includes(p.toLowerCase()));
+  return filtradas.length > 1 ? filtradas.slice(-2).join(' ') : filtradas[0] || 'Ingrediente secreto';
 }
 
 export const RECIPES: Recipe[] = ((): Recipe[] => {
@@ -69,11 +70,11 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
   
   cats.forEach((cat, cIdx) => {
     const pool = TITULOS_POOL[cat] || [];
-    const count = 40; // Generamos 40 variaciones únicas por categoría para diversidad real
+    const count = 30; // 30 variaciones para no saturar pero dar variedad
 
     for (let i = 0; i < count; i++) {
       const baseTitle = pool[i % pool.length];
-      const title = i >= pool.length ? `${baseTitle} Especial v.${i}` : baseTitle;
+      const title = i >= pool.length ? `${baseTitle} Selección Gourmet` : baseTitle;
       const tLow = title.toLowerCase();
       const principal = extraerIngredientePrincipal(title);
 
@@ -82,36 +83,48 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
       let extraSteps: string[] = [];
       let desc = "";
 
-      // Lógica de personalización por contenido
       if (tLow.includes('risotto') || tLow.includes('arroz')) {
         tecnica = BASES_TECNICAS.arroz;
-        extraIngs = [principal, 'Caldo específico de la base'];
-        extraSteps = [`Saltear ${principal} con un toque de sal`, `Incorporar el arroz y nacarar hasta que brille`, `Mantecar con el queso y ${principal}`];
-        desc = `Un risotto meloso donde el sabor de ${principal} es el protagonista indiscutible.`;
+        extraIngs = [principal, 'Queso rallado extra', 'Caldo de verduras intenso'];
+        extraSteps = [
+          `Sofreír la chalota picada hasta que esté transparente`,
+          `Incorporar el ${principal} y saltear 1 minuto`,
+          `Añadir el vino y dejar que se evapore por completo`,
+          `Añadir el caldo poco a poco sin dejar de remover`,
+          `Finalizar mantecando con mantequilla fría y el queso`
+        ];
+        desc = `Una interpretación sublime del risotto centrada en la pureza de ${principal}.`;
       } 
-      else if (cat === 'segundo' || tLow.includes('guiso') || tLow.includes('carrilleras')) {
+      else if (cat === 'segundo' || tLow.includes('guiso') || tLow.includes('bacalao')) {
         tecnica = BASES_TECNICAS.guiso;
-        extraIngs = [principal, 'Puerro', 'Pimiento rojo', 'Pimentón'];
-        extraSteps = [`Sellar bien ${principal} en la olla rápida`, `Desglasar el fondo con el vino seleccionado`, `Cocinar hasta que ${principal} se deshaga con el tenedor`];
-        desc = `Guiso tradicional de cocción lenta para extraer toda la esencia de ${principal}.`;
+        extraIngs = [principal, 'Pimiento de la vera', 'Vino tinto reserva', 'Fumet de pescado'];
+        extraSteps = [
+          `Sellar ${principal} a fuego muy fuerte para atrapar los jugos`,
+          `Pochar la cebolla y el pimiento con una pizca de sal`,
+          `Mojar con el vino y dejar reducir a la mitad`,
+          `Cocinar tapado a fuego mínimo durante el tiempo necesario`
+        ];
+        desc = `Cocina de paciencia y tradición donde ${principal} alcanza su máxima expresión.`;
       }
-      else if (tLow.includes('asado') || tLow.includes('horno') || tLow.includes('lubina') || tLow.includes('cordero')) {
-        tecnica = BASES_TECNICAS.asado;
-        extraIngs = [principal, 'Limón', 'Ajos tiernos', 'Vino blanco'];
-        extraSteps = [`Preparar la cama de patatas para ${principal}`, `Pintar ${principal} con aceite y especias`, `Hornear a temperatura constante controlando la humedad`];
-        desc = `El toque del horno resalta los jugos naturales de ${principal} en esta receta de gala.`;
-      }
-      else if (cat === 'postre' || tLow.includes('tarta') || tLow.includes('mousse')) {
+      else if (cat === 'postre' || tLow.includes('tarta')) {
         tecnica = BASES_TECNICAS.reposteria;
-        extraIngs = [principal, 'Nata para montar', 'Ralladura de cítricos'];
-        extraSteps = [`Mezclar la base de ${principal} con suavidad`, `Asegurar que la temperatura del horno sea exacta`, `Dejar reposar antes de desmoldar`];
-        desc = `El final perfecto para cualquier comida: dulce, equilibrado y con el aroma de ${principal}.`;
+        extraIngs = [principal, 'Azúcar glass', 'Canela en rama'];
+        extraSteps = [
+          `Preparar la base mezclando con cuidado ${principal}`,
+          `Precalentar el horno a 180 grados sin ventilación`,
+          `Hornear hasta que al pinchar el centro salga limpio`,
+          `Dejar enfriar totalmente antes de servir`
+        ];
+        desc = `Un final dulce e inolvidable con la delicadeza de ${principal}.`;
       }
       else {
-        // Genérico/Aperitivos/Desayunos
-        extraIngs = [principal, 'Pan artesano', 'Hierbas frescas'];
-        extraSteps = [`Disponer ${principal} con cuidado estético`, `Añadir el aliño justo antes de servir`, `Acompañar con el pan tostado`];
-        desc = `Un bocado delicioso y rápido preparado con ${principal} de la mejor calidad.`;
+        extraIngs = [principal, 'Aceite de oliva extra', 'Brotes tiernos'];
+        extraSteps = [
+          `Limpiar y trocear ${principal} en bocados uniformes`,
+          `Aliñar con el aceite y las hierbas frescas`,
+          `Montar el plato buscando un equilibrio visual`
+        ];
+        desc = `Receta fresca y rápida que resalta la calidad natural de ${principal}.`;
       }
 
       todas.push({
@@ -121,9 +134,9 @@ export const RECIPES: Recipe[] = ((): Recipe[] => {
         image: `https://picsum.photos/600/400?random=${(cIdx + 1) * 1000 + i}`,
         description: desc,
         ingredients: [...new Set([...tecnica.base, ...extraIngs])],
-        steps: [`Preparar todos los ingredientes sobre la encimera`, ...extraSteps, `Rectificar de sal y dejar reposar 2 minutos`],
-        tips: [`Utiliza siempre ${principal} fresco para un resultado óptimo.`, `No tengas prisa, el secreto está en el cariño.`],
-        time: `${20 + (i % 5) * 10} min`,
+        steps: [`Organizar el espacio de trabajo`, ...extraSteps, `Rectificar de sazón y emplatar`],
+        tips: [`Para potenciar el sabor de ${principal}, úsalo siempre a temperatura ambiente.`],
+        time: `${25 + (i % 4) * 10} min`,
         difficulty: (i % 3 === 0 ? 'Alta' : i % 2 === 0 ? 'Media' : 'Baja') as any
       });
     }

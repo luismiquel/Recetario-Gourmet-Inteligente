@@ -95,13 +95,28 @@ function App() {
 
   const handleGlobalCommand = useCallback((cmd: string) => {
     const c = cmd.toLowerCase();
-    if (/(mostrar|pon|ver|quiero|lista)/.test(c)) {
+    
+    // Filtros de categoría por voz
+    if (/(mostrar|pon|ver|quiero|lista|busca|buscame|ponme)/.test(c)) {
       if (c.includes('desayuno')) setActiveCategory('desayuno');
       else if (c.includes('aperitivo')) setActiveCategory('aperitivo');
       else if (c.includes('primero')) setActiveCategory('primero');
       else if (c.includes('segundo')) setActiveCategory('segundo');
       else if (c.includes('postre')) setActiveCategory('postre');
       else if (c.includes('todo')) setActiveCategory('todos');
+      
+      // Búsqueda por ingredientes/títulos específicos
+      if (c.includes('queso') || c.includes('quesos')) setSearchQuery('queso');
+      if (c.includes('risotto')) { 
+        setActiveCategory('primero'); 
+        setSearchQuery('risotto'); 
+      }
+      if (c.includes('arroz')) setSearchQuery('arroz');
+    }
+
+    if (/(quitar|borrar|limpiar|reset)/.test(c)) {
+      setSearchQuery('');
+      setActiveCategory('todos');
     }
   }, []);
 
@@ -112,7 +127,7 @@ function App() {
 
   useEffect(() => {
     if (globalVoiceEnabled && !isModalOpen) {
-      speak("Asistente activado. Di una categoría para filtrar tus recetas.");
+      speak("GourmetVoice activo. Pídeme una categoría o un ingrediente.");
     }
   }, [globalVoiceEnabled, isModalOpen, speak]);
 
@@ -120,11 +135,11 @@ function App() {
     return RECIPES.filter(r => {
       const matchCat = activeCategory === 'todos' || r.category === activeCategory;
       const q = searchQuery.toLowerCase();
-      const matchSearch = matchCat && (r.title.toLowerCase().includes(q) || r.ingredients.some(i => i.toLowerCase().includes(q)));
+      const matchSearch = (r.title.toLowerCase().includes(q) || r.ingredients.some(i => i.toLowerCase().includes(q)));
       const recipeTimeVal = parseInt(r.time.split(' ')[0]) || 0;
       const matchTime = maxTime === null || recipeTimeVal <= maxTime;
       const matchDiff = activeDifficulty === null || r.difficulty === activeDifficulty;
-      return matchSearch && matchTime && matchDiff;
+      return matchCat && matchSearch && matchTime && matchDiff;
     });
   }, [activeCategory, searchQuery, maxTime, activeDifficulty]);
 
@@ -139,6 +154,8 @@ function App() {
           <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => {
             window.scrollTo({top: 0, behavior: 'smooth'});
             window.history.replaceState({}, '', window.location.pathname);
+            setSearchQuery('');
+            setActiveCategory('todos');
           }}>
              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-600 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-serif font-black text-sm sm:text-lg">G</div>
              <h1 className="text-[10px] font-black tracking-tighter hidden xs:block uppercase text-white">GourmetVoice</h1>
@@ -169,7 +186,7 @@ function App() {
               return (
                 <button 
                   key={cat} 
-                  onClick={() => setActiveCategory(cat)} 
+                  onClick={() => { setActiveCategory(cat); setSearchQuery(''); }} 
                   className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all shrink-0 flex items-center gap-2 sm:gap-3 border-2 ${
                     activeCategory === cat ? `${theme.header} border-white text-stone-950 shadow-lg scale-105` : 'bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-500'
                   }`}
@@ -178,48 +195,6 @@ function App() {
                 </button>
               );
             })}
-          </div>
-
-          <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
-            <div className="flex gap-1.5 items-center bg-stone-900 p-1 rounded-xl border border-stone-800">
-              <span className="text-[8px] sm:text-[9px] font-black uppercase text-stone-500 px-1 sm:px-2 tracking-widest">⏳</span>
-              {[
-                { label: 'T', val: null },
-                { label: '15', val: 15 },
-                { label: '30', val: 30 },
-                { label: '60', val: 60 }
-              ].map(t => (
-                <button
-                  key={t.label}
-                  onClick={() => setMaxTime(t.val)}
-                  className={`w-7 h-7 sm:w-auto sm:px-4 sm:py-1.5 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black uppercase transition-all flex items-center justify-center ${
-                    maxTime === t.val ? 'bg-stone-100 text-stone-950' : 'text-stone-500 hover:bg-stone-800'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex gap-1.5 items-center bg-stone-900 p-1 rounded-xl border border-stone-800">
-              <span className="text-[8px] sm:text-[9px] font-black uppercase text-stone-500 px-1 sm:px-2 tracking-widest">🔥</span>
-              {[
-                { label: 'T', val: null },
-                { label: 'F', val: 'Baja' },
-                { label: 'M', val: 'Media' },
-                { label: 'A', val: 'Alta' }
-              ].map(d => (
-                <button
-                  key={d.label}
-                  onClick={() => setActiveDifficulty(d.val)}
-                  className={`w-7 h-7 sm:w-auto sm:px-4 sm:py-1.5 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black uppercase transition-all flex items-center justify-center ${
-                    activeDifficulty === d.val ? 'bg-stone-100 text-stone-950' : 'text-stone-500 hover:bg-stone-800'
-                  }`}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </header>
@@ -239,9 +214,6 @@ function App() {
                     <h3 className="font-sans font-black text-[12px] sm:text-[14px] leading-tight tracking-tight text-stone-950 text-center line-clamp-3 uppercase drop-shadow-md">
                       {recipe.title}
                     </h3>
-                    <div className="absolute top-2 right-2 w-7 h-7 sm:w-9 sm:h-9 bg-black/30 backdrop-blur-xl rounded-full flex items-center justify-center text-white border border-white/20 text-[10px] sm:text-sm">
-                      {favorites.includes(recipe.id) ? '★' : '☆'}
-                    </div>
                   </div>
 
                   <div className="p-3 sm:p-5 flex-1 flex flex-col bg-gradient-to-b from-stone-900 to-stone-950">
@@ -249,10 +221,7 @@ function App() {
                       <span className={`px-2 py-0.5 rounded-md sm:rounded-lg text-[7px] sm:text-[9px] font-black uppercase tracking-[0.1em] ${theme.light} ${theme.text} border ${theme.border}`}>
                         {recipe.category}
                       </span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-[7px] sm:text-[9px] text-stone-500">⏳</span>
-                        <span className="text-[7px] sm:text-[9px] font-black text-stone-300 uppercase">{recipe.time}</span>
-                      </div>
+                      <span className="text-[7px] sm:text-[9px] font-black text-stone-300 uppercase">{recipe.time}</span>
                     </div>
                     
                     <p className="text-stone-400 text-[10px] sm:text-[13px] line-clamp-2 italic leading-snug mb-3 font-medium opacity-80 group-hover:opacity-100 transition-opacity">
@@ -278,7 +247,6 @@ function App() {
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-6xl mb-6 animate-bounce">🍳</div>
             <h2 className="text-xl font-black text-white uppercase tracking-tighter mb-2">No encontramos esa receta</h2>
-            <p className="text-stone-500 text-sm max-w-xs mx-auto mb-6 font-bold">Prueba a borrar los filtros o buscar ingredientes básicos como "arroz" o "queso".</p>
             <button 
               onClick={() => { setMaxTime(null); setActiveDifficulty(null); setActiveCategory('todos'); setSearchQuery(''); }}
               className="px-8 py-3 bg-white text-stone-950 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-colors shadow-2xl"

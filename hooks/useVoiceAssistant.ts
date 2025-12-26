@@ -16,6 +16,19 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
   const manuallyStopped = useRef<boolean>(false);
   const restartTimeoutRef = useRef<number | null>(null);
 
+  const stopRecognition = useCallback(() => {
+    if (restartTimeoutRef.current) {
+      window.clearTimeout(restartTimeoutRef.current);
+      restartTimeoutRef.current = null;
+    }
+    try {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort(); // Abort es más agresivo que stop
+        setStatus('idle');
+      }
+    } catch (e) {}
+  }, []);
+
   const startRecognition = useCallback(() => {
     if (!enabled || isSpeakingRef.current || manuallyStopped.current) return;
     
@@ -25,28 +38,16 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
         setStatus('listening');
       }
     } catch (e) {
-      // Ignorar errores si ya está activo
+      // Si ya está iniciado, intentamos asegurar el estado
+      if (status !== 'speaking') setStatus('listening');
     }
-  }, [enabled]);
-
-  const stopRecognition = useCallback(() => {
-    if (restartTimeoutRef.current) {
-      window.clearTimeout(restartTimeoutRef.current);
-      restartTimeoutRef.current = null;
-    }
-    try {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        setStatus('idle');
-      }
-    } catch (e) {}
-  }, []);
+  }, [enabled, status]);
 
   const speak = useCallback((text: string) => {
     if (!enabled) return;
 
     const synth = window.speechSynthesis;
-    synth.cancel(); // Limpiar cola anterior
+    synth.cancel(); // Detener cualquier habla previa
     
     isSpeakingRef.current = true;
     stopRecognition();
@@ -59,15 +60,19 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
 
     utterance.onend = () => {
       isSpeakingRef.current = false;
-      // Pequeño delay para que el micro no capte el eco residual del altavoz
+      // Delay crucial para evitar eco residual
       restartTimeoutRef.current = window.setTimeout(() => {
-        if (!manuallyStopped.current) startRecognition();
-      }, 600);
+        if (!manuallyStopped.current && enabled) {
+          startRecognition();
+        } else {
+          setStatus('idle');
+        }
+      }, 400);
     };
 
     utterance.onerror = () => {
       isSpeakingRef.current = false;
-      startRecognition();
+      if (enabled) startRecognition();
     };
 
     synth.speak(utterance);
@@ -83,7 +88,8 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
 
     if (!recognitionRef.current) {
       const recognition = new SpeechRecognition();
-      recognition.continuous = true;
+      // Usar false en algunos navegadores mejora la estabilidad del evento onend
+      recognition.continuous = true; 
       recognition.interimResults = false;
       recognition.lang = 'es-ES';
 
@@ -91,21 +97,31 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
         const lastResultIndex = event.results.length - 1;
         const command = event.results[lastResultIndex][0].transcript;
         if (command) {
+          console.log("Comando detectado:", command);
           setStatus('processing');
           onCommand(command.trim());
+          // Breve delay antes de volver a escuchar si el comando no dispara un speak
+          setTimeout(() => {
+            if (!isSpeakingRef.current && enabled) setStatus('listening');
+          }, 1000);
         }
       };
 
       recognition.onend = () => {
+        // Reinicio automático si el sistema lo cierra por silencio
         if (enabled && !isSpeakingRef.current && !manuallyStopped.current) {
-          restartTimeoutRef.current = window.setTimeout(startRecognition, 200);
+          startRecognition();
         }
       };
 
       recognition.onerror = (event: any) => {
         if (event.error === 'aborted' || event.error === 'no-speech') return;
-        console.warn('Voz API Error:', event.error);
-        if (enabled && !manuallyStopped.current) {
+        console.error('Voz API Error:', event.error);
+        
+        if (event.error === 'not-allowed') {
+          setStatus('error');
+          manuallyStopped.current = true;
+        } else if (enabled && !manuallyStopped.current) {
           setTimeout(startRecognition, 1000);
         }
       };
@@ -122,7 +138,6 @@ export const useVoiceAssistant = ({ enabled, onCommand }: UseVoiceAssistantProps
     }
 
     return () => {
-      manuallyStopped.current = true;
       stopRecognition();
     };
   }, [enabled, onCommand, startRecognition, stopRecognition]);

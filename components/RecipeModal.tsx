@@ -98,12 +98,21 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
 
   const handleCommand = useCallback((cmd: string) => {
     const c = cmd.toLowerCase();
-    if (/(siguiente|próximo|pasa|adelante|ok|listo|ya)/.test(c)) nextStep();
-    else if (/(anterior|atrás|atras|vuelve|antes)/.test(c)) prevStep();
-    else if (/(cerrar|salir|adiós|adios|terminar)/.test(c)) onClose();
-    else if (/(ingredientes|lista|ver lista|qué necesito)/.test(c)) setViewMode('ingredients');
-    else if (/(pasos|preparación|instrucciones|cocinar)/.test(c)) setViewMode('full');
-    else if (/(compartir|copiar|enviar|link|enlace)/.test(c)) handleShare();
+    console.log("Comando en modal:", c);
+
+    if (/(siguiente|próximo|pasa|adelante|ok|listo|ya|continuar)/.test(c)) {
+      nextStep();
+    } else if (/(anterior|atrás|atras|vuelve|antes|repetir)/.test(c)) {
+      prevStep();
+    } else if (/(cerrar|salir|adiós|adios|terminar|finalizar)/.test(c)) {
+      onClose();
+    } else if (/(ingredientes|lista|ver lista|qué necesito|que necesito|necesito)/.test(c)) {
+      setViewMode('ingredients');
+    } else if (/(pasos|preparación|instrucciones|cocinar|volver)/.test(c)) {
+      setViewMode('full');
+    } else if (/(compartir|copiar|enviar|link|enlace)/.test(c)) {
+      handleShare();
+    }
   }, [nextStep, prevStep, onClose, handleShare]);
 
   const { status, speak } = useVoiceAssistant({
@@ -112,14 +121,14 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
   });
 
   useEffect(() => {
-    if (isOpen && recipe) {
+    if (isOpen && recipe && voiceEnabled) {
       if (activeStep === 0 && status === 'idle') {
-        speak(`${recipe.title}. Dificultad ${recipe.difficulty}. Di "Siguiente" para empezar.`);
+        speak(`${recipe.title}. Di "Siguiente" para empezar.`);
       } else if (activeStep > 0) {
-        speak(`Paso ${activeStep + 1}. ${recipe.steps[activeStep]}`);
+        speak(`Paso ${activeStep + 1}: ${recipe.steps[activeStep]}`);
       }
     }
-  }, [activeStep, isOpen, recipe]);
+  }, [activeStep, isOpen, recipe, voiceEnabled]);
 
   if (!isOpen || !recipe || !theme) return null;
 
@@ -189,26 +198,6 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
                 ))}
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Voice Commands Section */}
-        <div className="shrink-0 px-6 py-6 border-t-2 border-stone-800 bg-stone-900 shadow-inner">
-          <div className="max-w-4xl mx-auto flex flex-col items-center">
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-stone-500 mb-4">Comandos de Voz</span>
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-              {[
-                { label: 'SIGUIENTE', color: 'border-white/20 text-stone-300' },
-                { label: 'ATRÁS', color: 'border-white/20 text-stone-300' },
-                { label: 'LISTA', color: 'border-white/20 text-stone-300' },
-                { label: 'COMPARTIR', color: 'border-white/20 text-stone-300' },
-                { label: 'CERRAR', color: 'border-red-900/40 text-red-400' }
-              ].map((cmd, idx) => (
-                <div key={idx} className={`px-4 py-2 bg-stone-950/50 rounded-2xl border ${cmd.color} text-[9px] font-black uppercase tracking-[0.15em] shadow-lg`}>
-                  "{cmd.label}"
-                </div>
-              ))}
-            </div>
           </div>
         </div>
 
